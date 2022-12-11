@@ -13,6 +13,8 @@ export default class Transaction {
     @prop({ required: true, default: false })
     scheduled: boolean;
 
+    // Add field for scheduled dates
+
     @Field(() => String)
     @prop({ required: true, ref: "Account" })
     account: Ref<Account>;

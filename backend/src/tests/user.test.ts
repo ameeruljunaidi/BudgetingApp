@@ -139,7 +139,7 @@ describe("Authenticated users", () => {
         assert(usersResponses[0].body.kind === "single");
         const user: User = usersResponses[0].body.singleResult.data?.createUser as User;
         const userInDb = (await UserModel.findOne({ name: user.name }).lean()) as User;
-        logger.info(userInDb.name, "User to delete is:");
+        logger.info(userInDb.name, "User to delete is");
 
         const deleteResponse = await testUtils
             .testServer()

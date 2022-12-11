@@ -36,10 +36,12 @@ export default class User {
     @prop({ required: true, default: "user" })
     role: Role;
 
+    // TODO: Refactor this to include the accounts as sub-documents
     @Field(() => [String])
     @prop({ required: true, ref: () => Account, type: () => [String] })
     accounts: Ref<Account>[];
 
+    // TODO: Removed this, the categories will be a documents under accounts
     @Field(() => [String])
     @prop({ required: true, ref: () => Category, type: () => [String] })
     categories: Ref<Category>[];

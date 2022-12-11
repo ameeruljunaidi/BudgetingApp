@@ -49,7 +49,7 @@ class UserService {
             });
         }
 
-        logger.info("User found");
+        logger.info(user, "User found");
         const passwordIsValid = await bcrypt.compare(input.password, user.password);
 
         if (!passwordIsValid) {
