@@ -15,7 +15,7 @@ import AccountService from "../service/account.service";
 export default class UserResolver {
     @Mutation(() => User)
     createUser(@Arg("input") input: CreateUserInput) {
-        return UserService.createUser(input);
+        return UserService.createUser(input)
     }
 
     @Mutation(() => String)

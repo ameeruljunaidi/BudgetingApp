@@ -4,9 +4,9 @@ import ConvertCurrencyInput from "../schema/exchangeRate/convertCurrency.input";
 import { ExchangeResponse } from "../types/exchangeResponse";
 import path from "path";
 
-import pinoLogger from "../utils/logger";
+import myLogger from "../utils/logger";
 
-const logger = pinoLogger(path.basename(__filename));
+const logger = myLogger(path.basename(__filename));
 
 const convertCurrency = async (input: ConvertCurrencyInput): Promise<Number> => {
     const { from, to, date, amount }: ConvertCurrencyInput = input;

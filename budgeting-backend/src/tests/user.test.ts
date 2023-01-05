@@ -6,9 +6,9 @@ import { GraphQLResponse } from "@apollo/server";
 import assert from "assert";
 import path from "path";
 
-import pinoLogger from "../utils/logger";
+import myLogger from "../utils/logger";
 
-const logger = pinoLogger(path.basename(__filename));
+const logger = myLogger(path.basename(__filename));
 
 const usersInfo = usersData.map((user) => {
     const { password, ...userInfo } = user;

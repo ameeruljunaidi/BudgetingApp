@@ -1,10 +1,11 @@
-import { getModelForClass, pre, prop } from "@typegoose/typegoose";
+import { getModelForClass, plugin, pre, prop } from "@typegoose/typegoose";
 import { Length } from "class-validator";
 import { Field, ObjectType } from "type-graphql";
 import bcrypt from "bcrypt";
 import Account from "./account.schema";
 import Category from "./category.schema";
 import descriptions from "../utils/descriptions";
+import uniqueValidator from "mongoose-unique-validator"
 
 export type Role = "admin" | "user" | "guest";
 
@@ -14,6 +15,7 @@ export type Role = "admin" | "user" | "guest";
     const salt = await bcrypt.genSalt(10);
     this.password = bcrypt.hashSync(this.password, salt);
 })
+@plugin(uniqueValidator)
 @ObjectType({ description: descriptions.USER })
 export default class User {
     @Field(() => String, { description: descriptions.USER_ID })
@@ -25,7 +27,7 @@ export default class User {
     name: string;
 
     @Field(() => String, { description: descriptions.USER_EMAIL })
-    @prop({ required: true, unique: true })
+    @prop({ required: true, unique: true, index: true  })
     email: string;
 
     @Length(6, 50)
@@ -37,7 +39,7 @@ export default class User {
     role: string;
 
     @Field(() => [Account], { defaultValue: [], nullable: "items" })
-    @prop({ required: true, type: () => [Account], default: [] })
+    @prop({ required: true, type: () => [Account] })
     accounts: Account[];
 
     @Field(() => [String])

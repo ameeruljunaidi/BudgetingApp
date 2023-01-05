@@ -8,17 +8,18 @@ import CreateUserInput from "../schema/user/createUser.input";
 import LoginInput from "../schema/user/login.input";
 import path from "path";
 
-import pinoLogger from "../utils/logger";
+import myLogger from "../utils/logger";
+import getPagination from "./pagination.service";
 
-const logger = pinoLogger(path.basename(__filename));
+const logger = myLogger(path.basename(__filename));
 
-const getUserById = async (userId: string): Promise<User> => {
-    const user: User = await UserModel.findById(userId).lean();
+export const getUserById = async (userId: string): Promise<User> => {
+    const user = await UserModel.findById(userId).lean();
     if (!user) throw new GraphQLError("Cannot find user in DB");
 
     logger.info(user, "User retrieved from DB");
 
-    return user;
+    return user as User;
 };
 
 const createUser = async (input: CreateUserInput): Promise<User> => {
@@ -27,20 +28,24 @@ const createUser = async (input: CreateUserInput): Promise<User> => {
 };
 
 const login = async (input: LoginInput, _context: Context): Promise<string> => {
-    const errorMessage = "Invalid email or password";
     const user: User = await UserModel.findOne({ email: input.email }).lean();
 
     if (!user) {
-        throw new GraphQLError(errorMessage, {
+        const userNotFound = "Please sign up.";
+
+        throw new GraphQLError(userNotFound, {
             extensions: { code: "BAD_USER_INPUT" },
         });
     }
 
-    logger.info("User found");
+    logger.info({ user }, "User found");
+    logger.info({ input: input.password }, "Input password");
     const passwordIsValid = await bcrypt.compare(input.password, user.password);
 
     if (!passwordIsValid) {
-        throw new GraphQLError(errorMessage, {
+        const wrongCredentials = "Wrong email or password. Please try again.";
+
+        throw new GraphQLError(wrongCredentials, {
             extensions: { code: "BAD_USER_INPUT" },
         });
     }
@@ -86,4 +91,6 @@ const updateUser = async (updatedUser: User): Promise<User> => {
     return returnedUpdatedUser;
 };
 
-export default { getUserById, createUser, login, getUsers, deleteUser, updateUser };
+const getUsersPaginated = getPagination<User>(UserModel);
+
+export default { getUserById, createUser, login, getUsers, deleteUser, updateUser, getUsersPaginated };

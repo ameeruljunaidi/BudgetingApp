@@ -21,22 +21,27 @@ import resolvers from "./resolvers";
 import authChecker from "./utils/authChecker";
 import path from "path";
 
-import pinoLogger from "./utils/logger";
+import myLogger from "./utils/logger";
 
-const logger = pinoLogger(path.basename(__filename));
+const logger = myLogger(path.basename(__filename));
 
 (async () => {
     try {
         mongoose.set("strictQuery", false); // Remove for Mongoose 7 later
 
-        await mongoose.connect(config.MONGODB_URI());
+        await mongoose.connect(config.MONGODB_URI(), { autoIndex: true });
+        await mongoose.connection.syncIndexes(); // fixed unique not working: https://dev.to/akshatsinghania/mongoose-unique-not-working-16bf
         logger.info(`Successfully connected to MongoDB in ${config.MODE} mode`);
 
         const app = express();
         const httpServer = http.createServer(app);
         const builtSchema = await buildTypeDefsAndResolvers({ resolvers, authChecker });
         const schema = makeExecutableSchema(builtSchema);
-        const server = new ApolloServer<Context>({ schema, context } as ApolloServerOptions<Context>);
+        const server = new ApolloServer<Context>({
+            schema,
+            context,
+            introspection: true,
+        } as ApolloServerOptions<Context>);
 
         await server.start();
         logger.info("Apollo server started");

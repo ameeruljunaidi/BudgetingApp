@@ -12,9 +12,9 @@ import { DocumentType } from "@typegoose/typegoose";
 import CreateUserInput from "../../schema/user/createUser.input";
 import assert from "assert";
 import path from "path";
-import pinoLogger from "../../utils/logger";
+import myLogger from "../../utils/logger";
 
-const logger = pinoLogger(path.basename(__filename));
+const logger = myLogger(path.basename(__filename));
 
 let apolloServer: ApolloServer<TestContext>;
 const startTestServer = async (): Promise<void> => {

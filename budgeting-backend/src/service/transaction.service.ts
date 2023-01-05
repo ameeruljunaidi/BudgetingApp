@@ -5,10 +5,11 @@ import QueryTransactionsInput from "../schema/transaction/queryTransactions.inpu
 import User from "../schema/user.schema";
 import path from "path";
 
-import pinoLogger from "../utils/logger";
+import myLogger from "../utils/logger";
 import Account from "../schema/account.schema";
+import UserService from "./user.service";
 
-const logger = pinoLogger(path.basename(__filename));
+const logger = myLogger(path.basename(__filename));
 
 const addTransaction = async (input: AddTransactionInput & { user: User["_id"] }): Promise<Transaction> => {
     logger.info(input, "Adding transaction:");
@@ -16,10 +17,9 @@ const addTransaction = async (input: AddTransactionInput & { user: User["_id"] }
     // 1.  Find the account to add the transaction to
     // Every transaction needs to be linked to an account
     // Throw error immediately if account is not found
-    const returnedAccount = {} as Account; // TODO: Fix this
-
+    const returnedUser: User = await UserService.getUserById(input.user);
+    const returnedAccount: Account | undefined = returnedUser.accounts.find(account => account.name === input.account);
     if (!returnedAccount) throw new GraphQLError("Cannot find account.");
-
     logger.info(returnedAccount, "Account found:");
 
     // 2. From categories from the input, go through each one and ensure that there are all already in the database
@@ -43,22 +43,33 @@ const addTransaction = async (input: AddTransactionInput & { user: User["_id"] }
     //     transactions: returnedAccount.transactions.concat(returnedTransaction._id),
     // };
 
-    const returnedUpdatedAccount: Account = {} as Account; // TODO: Fix this
+    const updatedAccount: Account = {
+        ...returnedAccount,
+        transactions: returnedAccount.transactions.concat(returnedTransaction._id)
+    };
 
-    if (!returnedUpdatedAccount) {
-        // Reverse the addition of transaction
-        await TransactionModel.findByIdAndDelete(returnedTransaction._id);
-        throw new GraphQLError("Error updating account");
+    const updatedUser: User = {
+        ...returnedUser,
+        accounts: returnedUser.accounts.map(account => account._id === returnedAccount._id ? updatedAccount : account)
     }
 
-    logger.info(returnedUpdatedAccount, "Account updated:");
+    let returnedUpdatedUser: User;
+
+    try {
+        returnedUpdatedUser = await UserService.updateUser(updatedUser);
+        logger.info(returnedUpdatedUser.accounts, "Account updated:");
+    } catch (e) {
+        // Reverse the addition of transaction
+        await TransactionModel.findByIdAndDelete(returnedTransaction._id);
+        throw new GraphQLError(`${e}. Error updating account`);
+    }
 
     return returnedTransaction;
 };
 
 const getTransactions = async (input: QueryTransactionsInput & { user: User["_id"] }): Promise<Transaction[]> => {
     const { user, ...params } = input;
-    const searchIn = Object.fromEntries(Object.entries(params).map(([key, value], _index) => [key, { $in: value }]));
+    const searchIn = Object.fromEntries(Object.entries(params).map(([ key, value ], _index) => [ key, { $in: value } ]));
     const searchParams = { user, ...searchIn };
     logger.info(searchParams, "Search parameters is:");
     return TransactionModel.find(searchParams);

@@ -8,7 +8,7 @@ export default class Account {
     _id: string;
 
     @Field(() => String)
-    @prop({ required: true, unique: true })
+    @prop({ required: true })
     name: string;
 
     @Field(() => String)
