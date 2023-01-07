@@ -46,6 +46,7 @@ const logger = myLogger(path.basename(__filename));
         await server.start();
         logger.info("Apollo server started");
 
+        app.use(cors());
         // @ts-ignore: server type unresolved issues, might be Apollo 4.0 issue, not sure
         app.use("/graphql", cors<cors.CorsRequest>(), bodyParser.json(), expressMiddleware(server, { context }));
 

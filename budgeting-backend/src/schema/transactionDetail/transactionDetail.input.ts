@@ -1,16 +1,16 @@
-import {Field, InputType} from "type-graphql";
+import { Field, InputType } from "type-graphql";
 
 @InputType()
 export default class AddTransactionDetailInput {
     @Field(() => String)
-    categoryGroup: string
+    categoryGroup: string;
 
     @Field(() => String)
-    category: string
+    category: string;
 
     @Field(() => String)
-    payee: string
+    payee: string;
 
     @Field(() => Number)
-    amount: number
+    amount: number;
 }

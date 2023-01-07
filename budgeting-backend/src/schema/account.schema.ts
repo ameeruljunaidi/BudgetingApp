@@ -26,4 +26,13 @@ export default class Account {
     @Field(() => Boolean, { defaultValue: true })
     @prop({ required: true, default: true })
     reconciled: boolean;
+
+    // checking, credit, tracking
+    @Field(() => String, { defaultValue: "checking" })
+    @prop({ required: true, default: "checking" })
+    type: string;
+
+    @Field(() => Number, { defaultValue: 0 })
+    @prop({ required: true, default: 0 })
+    balance: number;
 }
