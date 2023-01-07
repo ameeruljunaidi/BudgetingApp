@@ -14,7 +14,7 @@ const logger = myLogger(path.basename(__filename));
 const addAccount = async (input: AddAccountInput, userId: string): Promise<Account> => {
     const returnedUser: User = await UserService.getUserById(userId);
 
-    const accountIsNew = returnedUser.accounts.reduce((accum, account) => account.name !== input.name, true);
+    const accountIsNew = returnedUser.accounts.reduce((accum, account) => accum && account.name !== input.name, true);
     if (!accountIsNew) {
         throw new GraphQLError("Account name must be unique", { extensions: { code: "BAD_USER_INPUT" } });
     }

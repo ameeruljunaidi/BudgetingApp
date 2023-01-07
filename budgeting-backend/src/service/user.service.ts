@@ -23,8 +23,7 @@ export const getUserById = async (userId: string): Promise<User> => {
 };
 
 const createUser = async (input: CreateUserInput): Promise<User> => {
-    const category = { categoryGroup: "Main Category Group", category: "Main Category" };
-    return UserModel.create({ ...input, categories: [category] });
+    return UserModel.create({ ...input });
 };
 
 const login = async (input: LoginInput, _context: Context): Promise<string> => {

@@ -1,4 +1,4 @@
-import {Field, InputType} from "type-graphql";
+import { Field, InputType } from "type-graphql";
 import AddTransactionDetailInput from "../transactionDetail/transactionDetail.input";
 
 @InputType()
@@ -10,7 +10,7 @@ export default class AddTransactionInput {
     account: String;
 
     @Field(() => [AddTransactionDetailInput])
-    transactionDetail: AddTransactionDetailInput[];
+    transactionDetails: AddTransactionDetailInput[];
 
     @Field(() => Boolean)
     reconciled: boolean;

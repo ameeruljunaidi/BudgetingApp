@@ -3,9 +3,8 @@ import { Length } from "class-validator";
 import { Field, ObjectType } from "type-graphql";
 import bcrypt from "bcrypt";
 import Account from "./account.schema";
-import Category from "./category.schema";
 import descriptions from "../utils/descriptions";
-import uniqueValidator from "mongoose-unique-validator"
+import uniqueValidator from "mongoose-unique-validator";
 
 export type Role = "admin" | "user" | "guest";
 
@@ -27,7 +26,7 @@ export default class User {
     name: string;
 
     @Field(() => String, { description: descriptions.USER_EMAIL })
-    @prop({ required: true, unique: true, index: true  })
+    @prop({ required: true, unique: true, index: true })
     email: string;
 
     @Length(6, 50)
@@ -46,9 +45,9 @@ export default class User {
     @prop({ required: true, type: () => [String], default: ["Main Category Group"] })
     categoryGroups: string[];
 
-    @Field(() => [Category])
-    @prop({ required: true, type: () => [Category], default: [] })
-    categories: Category[];
+    @Field(() => [String])
+    @prop({ required: true, default: ["Main Category"] })
+    categories: string[];
 
     @Field(() => [String])
     @prop({ required: true, type: () => [String], default: ["Main Payee"] })
