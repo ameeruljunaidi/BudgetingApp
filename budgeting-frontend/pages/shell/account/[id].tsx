@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { Center, Container, Loader, Paper, Text } from "@mantine/core";
+import { Center, Container, Loader, Paper, Space, Text } from "@mantine/core";
 import { useViewportSize } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import { ReactElement, useContext } from "react";
@@ -9,6 +9,7 @@ import type { NextPageWithLayout } from "../../_app";
 import { UserContext } from "../../../layouts/shell";
 import TransactionsTable from "../../../components/transactions-table";
 import { Transaction } from "../../../graphql/__generated__/graphql";
+import TransactionsHeader from "../../../components/transaction-header";
 
 const AccountPage: NextPageWithLayout = () => {
     const router = useRouter();
@@ -51,11 +52,18 @@ const AccountPage: NextPageWithLayout = () => {
 
     return (
         <Container>
-            <Paper h={height * 0.1} w={460} bg="white" p="xs" withBorder radius="lg">
-                <Text size="sm">Name: {account?.name}</Text>
+            <Paper bg="white" p="xs" withBorder>
+                <Text size="lg" weight={700}>
+                    {account?.name}
+                </Text>
                 <Text size="sm">Currency: {account?.currency}</Text>
-                <Text size="sm">Balance: {account?.balance}</Text>
+                <Text size="sm">
+                    Balance: {account?.balance.toLocaleString("en-US", { style: "currency", currency: "USD" })}
+                </Text>
             </Paper>
+            <Space h={8} />
+            <TransactionsHeader accountId={accountId} />
+            <Space h={8} />
             <TransactionsTable transactions={transactions} />
         </Container>
     );

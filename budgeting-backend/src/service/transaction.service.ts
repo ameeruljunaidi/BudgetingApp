@@ -61,6 +61,9 @@ const addTransaction = async (input: AddTransactionInput & { user: User["_id"] }
     const updatedAccount: Account = {
         ...returnedAccount,
         transactions: returnedAccount.transactions.concat(returnedTransaction._id),
+        balance:
+            returnedAccount.balance +
+            returnedTransaction.toObject().transactionDetails.reduce((accum, detail) => accum + detail.amount, 0),
     };
 
     const updatedUser: User = {
