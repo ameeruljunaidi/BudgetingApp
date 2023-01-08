@@ -1,18 +1,35 @@
 import { useQuery } from "@apollo/client";
-import { Center, Container, Header, Loader, MediaQuery, Paper, Text } from "@mantine/core";
+import { Center, Container, Loader, Paper, Text } from "@mantine/core";
 import { useViewportSize } from "@mantine/hooks";
 import { useRouter } from "next/router";
-import { ReactElement } from "react";
-import Shell from "../../../components/shell";
-import GET_ME from "../../../graphql/queries/get-me";
+import { ReactElement, useContext } from "react";
+import Shell from "../../../layouts/shell";
+import GET_TRANSACTIONS_FROM_ACCOUNT from "../../../graphql/queries/get-transactions-from-account";
 import type { NextPageWithLayout } from "../../_app";
+import { UserContext } from "../../../layouts/shell";
+import TransactionsTable from "../../../components/transactions-table";
+import { Transaction } from "../../../graphql/__generated__/graphql";
 
 const AccountPage: NextPageWithLayout = () => {
     const router = useRouter();
-    const { id } = router.query;
+    const accountId = router.query.id as string;
     const { height, width } = useViewportSize();
+    const user = useContext(UserContext);
 
-    const { data, loading, error } = useQuery(GET_ME);
+    const { data, loading, error } = useQuery(GET_TRANSACTIONS_FROM_ACCOUNT, {
+        variables: { accountId },
+        skip: !accountId,
+    });
+
+    if (!user) {
+        return (
+            <Center h={height} w={width}>
+                <Text>User not found</Text>
+            </Center>
+        );
+    }
+
+    const account = user.accounts.find(account => account?._id === accountId);
 
     if (loading) {
         return (
@@ -25,15 +42,12 @@ const AccountPage: NextPageWithLayout = () => {
     if (error) {
         return (
             <Center h={height} w={width}>
-                <Text>User & account not found. {error.graphQLErrors[0].message}</Text>
+                <Text>Account not found. {error.graphQLErrors[0].message}</Text>
             </Center>
         );
     }
 
-    const user = data?.me;
-    const account = user?.accounts.find(account => account?._id === id);
-    const transactions = account?.transactions;
-    console.log(account);
+    const transactions: Transaction[] = data?.getTransactionsFromAccount ?? [];
 
     return (
         <Container>
@@ -42,6 +56,7 @@ const AccountPage: NextPageWithLayout = () => {
                 <Text size="sm">Currency: {account?.currency}</Text>
                 <Text size="sm">Balance: {account?.balance}</Text>
             </Paper>
+            <TransactionsTable transactions={transactions} />
         </Container>
     );
 };

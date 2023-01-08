@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
-import Shell from "../../components/shell";
+import Shell from "../../layouts/shell";
 import { UsersRolesTable } from "../../components/users-table";
 import { GetUsersDocument, User } from "../../graphql/__generated__/graphql";
 import client from "../../lib/apollo-client";

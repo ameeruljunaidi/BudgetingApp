@@ -20,4 +20,10 @@ export default class TransactionResolver {
         const user = context.user;
         return TransactionService.addTransaction({ ...input, user: user?._id as string });
     }
+
+    @Authorized("admin", "user")
+    @Query(() => [Transaction])
+    getTransactionsFromAccount(@Ctx() context: Context, @Arg("accountId") accountId: string) {
+        return TransactionService.getTransactionsFromAccount(context.user, accountId);
+    }
 }

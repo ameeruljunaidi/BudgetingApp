@@ -2,7 +2,7 @@ import { GraphQLError } from "graphql";
 import Transaction, { TransactionDetail, TransactionModel } from "../schema/transaction.schema";
 import AddTransactionInput from "../schema/transaction/addTransaction.input";
 import QueryTransactionsInput from "../schema/transaction/queryTransactions.input";
-import User from "../schema/user.schema";
+import User, { UserModel } from "../schema/user.schema";
 import path from "path";
 
 import myLogger from "../utils/logger";
@@ -92,4 +92,16 @@ const getTransactions = async (input: QueryTransactionsInput & { user: User["_id
     return TransactionModel.find(searchParams);
 };
 
-export default { addTransaction, getTransactions };
+const getTransactionsFromAccount = async (user: User | null, accountId: string): Promise<Transaction[]> => {
+    if (!user) throw new GraphQLError("Cannot find logged in user");
+
+    const account = user.accounts.find((account) => account._id.toString() === accountId);
+    if (!account) throw new GraphQLError("Account not found.");
+
+    const transactions = await TransactionModel.find({ _id: { $in: account.transactions } }).lean();
+    if (!transactions) return [];
+
+    return transactions;
+};
+
+export default { addTransaction, getTransactions, getTransactionsFromAccount };
