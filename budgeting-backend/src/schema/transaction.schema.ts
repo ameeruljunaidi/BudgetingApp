@@ -26,6 +26,10 @@ export default class Transaction {
     @Field(() => String)
     _id: string;
 
+    @Field(() => Date)
+    @prop({ required: true })
+    date: Date;
+
     @Field(() => Boolean)
     @prop({ required: true, default: false })
     scheduled: boolean;

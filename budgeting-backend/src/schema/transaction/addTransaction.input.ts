@@ -3,6 +3,9 @@ import AddTransactionDetailInput from "../transactionDetail/transactionDetail.in
 
 @InputType()
 export default class AddTransactionInput {
+    @Field(() => Date)
+    date: Date;
+
     @Field(() => Boolean)
     scheduled: boolean;
 

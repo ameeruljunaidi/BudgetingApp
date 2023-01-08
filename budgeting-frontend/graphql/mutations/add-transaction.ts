@@ -1,8 +1,8 @@
 import { gql } from "../__generated__";
 
-const GET_TRANSACTIONS_FROM_ACCOUNT = gql(/* GraphQL */ `
-  query GetTransactionsFromAccount($accountId: String!) {
-    getTransactionsFromAccount(accountId: $accountId) {
+const ADD_TRANSACTION = gql(/* GraphQL */ `
+  mutation AddTransaction($input: AddTransactionInput!) {
+    addTransaction(input: $input) {
       _id
       date
       account
@@ -12,8 +12,8 @@ const GET_TRANSACTIONS_FROM_ACCOUNT = gql(/* GraphQL */ `
       scheduled
       scheduledDates
       transactionDetails {
-        amount
         category
+        amount
         categoryGroup
         payee
       }
@@ -21,4 +21,4 @@ const GET_TRANSACTIONS_FROM_ACCOUNT = gql(/* GraphQL */ `
   }
 `);
 
-export default GET_TRANSACTIONS_FROM_ACCOUNT;
+export default ADD_TRANSACTION;

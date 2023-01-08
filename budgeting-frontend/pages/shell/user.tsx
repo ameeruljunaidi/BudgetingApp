@@ -8,21 +8,21 @@ import GET_ME from "../../graphql/queries/get-me";
 import type { NextPageWithLayout } from "../_app";
 
 const Page: NextPageWithLayout = () => {
-    const user = useContext(UserContext);
+  const user = useContext(UserContext);
 
-    return <div>{JSON.stringify(user)}</div>;
+  return <div>{JSON.stringify(user)}</div>;
 };
 
 const User: NextPageWithLayout = () => {
-    return (
-        <ClientOnly>
-            <Page />
-        </ClientOnly>
-    );
+  return (
+    <ClientOnly>
+      <Page />
+    </ClientOnly>
+  );
 };
 
 User.getLayout = function getLayout(page: ReactElement) {
-    return <Shell>{page}</Shell>;
+  return <Shell>{page}</Shell>;
 };
 
 export default User;

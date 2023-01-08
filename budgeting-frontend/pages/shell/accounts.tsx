@@ -7,20 +7,20 @@ import GET_ME from "../../graphql/queries/get-me";
 import type { NextPageWithLayout } from "../_app";
 
 const Page: NextPageWithLayout = () => {
-    const { data, loading, error } = useQuery(GET_ME);
+  const { data, loading, error } = useQuery(GET_ME);
 
-    if (loading) return <Loader />;
-    if (error) return <div>Error: ${error.graphQLErrors[0].message}</div>;
+  if (loading) return <Loader />;
+  if (error) return <div>Error: ${error.graphQLErrors[0].message}</div>;
 
-    return <div>{JSON.stringify(data?.me?.accounts)}</div>;
+  return <div>{JSON.stringify(data?.me?.accounts)}</div>;
 };
 
 const Accounts: NextPageWithLayout = () => {
-    return <Page />;
+  return <Page />;
 };
 
 Accounts.getLayout = function getLayout(page: ReactElement) {
-    return <Shell>{page}</Shell>;
+  return <Shell>{page}</Shell>;
 };
 
 export default Accounts;
