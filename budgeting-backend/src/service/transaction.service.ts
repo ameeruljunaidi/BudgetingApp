@@ -1,17 +1,30 @@
 import { GraphQLError } from "graphql";
-import Transaction, { TransactionDetail, TransactionModel } from "../schema/transaction.schema";
+import Transaction, { TransactionModel } from "../schema/transaction.schema";
 import AddTransactionInput from "../schema/transaction/addTransaction.input";
 import QueryTransactionsInput from "../schema/transaction/queryTransactions.input";
-import User, { UserModel } from "../schema/user.schema";
+import User from "../schema/user.schema";
 import path from "path";
 
 import myLogger from "../utils/logger";
 import Account from "../schema/account.schema";
 import UserService from "./user.service";
-import AddTransactionDetailInput from "../schema/transactionDetail/transactionDetail.input";
+
+import _ from "lodash";
+import UpdateTransactionInput from "../schema/transaction/updateTransactionInput";
+import Context from "../types/context";
 
 const logger = myLogger(path.basename(__filename));
 
+/**
+ * Adding transaction will:
+ * 1. Throw error if account not found
+ * 2. Check that the category/category group does exist (except for reconciler)
+ * 3. Update the account to include the new transaction and the new balance
+ * 4. Update the user (which holds the account) and also add a payee (if payee does not already exist)
+ *
+ * @param input: AddTransactionInput & User["_id"]
+ * @returns Transaction
+ */
 const addTransaction = async (input: AddTransactionInput & { user: User["_id"] }): Promise<Transaction> => {
     logger.info(input, "Adding transaction:");
 
@@ -36,14 +49,20 @@ const addTransaction = async (input: AddTransactionInput & { user: User["_id"] }
     const newTransaction = new TransactionModel({ ...input, account: returnedAccount._id });
 
     // Check if the category group and category exist
-    const categoryCheck =
-        returnedUser.categories.find((category) =>
-            input.transactionDetails.find((detail) => detail.category === category)
-        ) &&
-        returnedUser.categoryGroups.find((categoryGroup) =>
-            input.transactionDetails.find((detail) => detail.categoryGroup === categoryGroup)
-        );
-    if (!categoryCheck) throw new GraphQLError("Category/Category Group does not exist, please create first");
+    // TODO: Implement category check
+
+    // Ignore if it is a reconciler transactions
+    // const isReconciler = (newTransaction: Transaction) => {
+    //     const reconciler = "Reconciler";
+    //     return (
+    //         newTransaction.transactionDetails[0].category === reconciler &&
+    //         newTransaction.transactionDetails[0].payee === reconciler
+    //     );
+    // };
+
+    // if (!isReconciler(newTransaction.toObject())) {
+    //     throw new GraphQLError("Category/Category Group does not exist, please create first");
+    // }
 
     newTransaction.markModified("transactionDetail");
     const returnedTransaction = await newTransaction.save();
@@ -58,18 +77,25 @@ const addTransaction = async (input: AddTransactionInput & { user: User["_id"] }
     //     transactions: returnedAccount.transactions.concat(returnedTransaction._id),
     // };
 
+    const newBalance =
+        returnedAccount.balance +
+        returnedTransaction.toObject().transactionDetails.reduce((accum, detail) => accum + detail.amount, 0);
+
     const updatedAccount: Account = {
         ...returnedAccount,
         transactions: returnedAccount.transactions.concat(returnedTransaction._id),
-        balance:
-            returnedAccount.balance +
-            returnedTransaction.toObject().transactionDetails.reduce((accum, detail) => accum + detail.amount, 0),
+        balance: newBalance,
+        reconciled: returnedAccount.balance === newBalance,
     };
 
     const updatedUser: User = {
         ...returnedUser,
         accounts: returnedUser.accounts.map((account) =>
             account._id === returnedAccount._id ? updatedAccount : account
+        ),
+        payees: _.union(
+            returnedUser.payees,
+            returnedTransaction.toObject().transactionDetails.map((detail) => detail.payee)
         ),
     };
 
@@ -107,4 +133,40 @@ const getTransactionsFromAccount = async (user: User | null, accountId: string):
     return transactions;
 };
 
-export default { addTransaction, getTransactions, getTransactionsFromAccount };
+const updateTransaction = async (transaction: UpdateTransactionInput): Promise<Transaction> => {
+    const updatedTransaction: Transaction = { ...transaction, _id: transaction.id };
+    const returnedTransactions = await TransactionModel.findByIdAndUpdate(updatedTransaction._id, updatedTransaction, {
+        new: true,
+    });
+    if (!returnedTransactions) throw new GraphQLError("Error updating user to the DB");
+    logger.info("Transaction updated");
+    return returnedTransactions;
+};
+
+const deleteTransaction = async (transactionId: string, accountId: string, context: Context): Promise<Transaction> => {
+    const userFromContext = context.user;
+    if (!userFromContext) throw new GraphQLError("User must be logged in");
+    const user = await UserService.getUserById(userFromContext._id);
+
+    const returnedTransaction = await TransactionModel.findByIdAndDelete(transactionId);
+    if (!returnedTransaction) throw new GraphQLError("Failed to removed transaction");
+
+    await UserService.updateUser({
+        ...user,
+        accounts: user.accounts.map(
+            (account): Account =>
+                account._id.toString() !== accountId
+                    ? account
+                    : {
+                          ...account,
+                          transactions: account.transactions.filter(
+                              (transaction) => transaction.toString() !== transactionId
+                          ),
+                      }
+        ),
+    });
+
+    return returnedTransaction;
+};
+
+export default { addTransaction, getTransactions, getTransactionsFromAccount, updateTransaction, deleteTransaction };

@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { Center, Container, Loader, Paper, Space, Text } from "@mantine/core";
+import { Button, Center, Container, Flex, Group, Loader, Paper, Space, Text } from "@mantine/core";
 import { useViewportSize } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import { ReactElement, useContext } from "react";
@@ -7,9 +7,9 @@ import Shell from "../../../layouts/shell";
 import GET_TRANSACTIONS_FROM_ACCOUNT from "../../../graphql/queries/get-transactions-from-account";
 import type { NextPageWithLayout } from "../../_app";
 import { UserContext } from "../../../layouts/shell";
-import TransactionsTable from "../../../components/transactions-table";
+import TransactionsTable from "../../../components/account/transactions-table";
 import { Transaction } from "../../../graphql/__generated__/graphql";
-import TransactionsHeader from "../../../components/transaction-header";
+import TransactionsHeader from "../../../components/account/transaction-header";
 
 const AccountPage: NextPageWithLayout = () => {
   const router = useRouter();
@@ -53,13 +53,30 @@ const AccountPage: NextPageWithLayout = () => {
   return (
     <Container>
       <Paper bg="white" p="xs" withBorder>
-        <Text size="lg" weight={700}>
-          {account?.name}
-        </Text>
-        <Text size="sm">Currency: {account?.currency}</Text>
-        <Text size="sm">
-          Balance: {account?.balance.toLocaleString("en-US", { style: "currency", currency: "USD" })}
-        </Text>
+        <Group position="apart" grow>
+          <Container>
+            <Text size="lg" weight={700}>
+              {account?.name}
+            </Text>
+            <Text size="sm">Currency: {account?.currency}</Text>
+            <Text size="sm">
+              Balance: {account?.balance.toLocaleString("en-US", { style: "currency", currency: "USD" })}
+            </Text>
+          </Container>
+          <Flex justify="center" align="center">
+            <Container>
+              <Text size="sm">Account Reconciled: {account?.reconciled ? "Yes" : "No"}</Text>
+              <Text size="sm">
+                Reconciled Balance:{" "}
+                {account?.reconciledBalance.toLocaleString("en-US", { style: "currency", currency: "USD" })}
+              </Text>
+              <Text size="sm">
+                Last reconciled: {new Date(Date.parse(account?.lastReconciled)).toLocaleDateString("en-GB")}
+              </Text>
+            </Container>
+            <Button bg="black">Reconcile</Button>
+          </Flex>
+        </Group>
       </Paper>
       <Space h={8} />
       <TransactionsHeader accountId={accountId} />

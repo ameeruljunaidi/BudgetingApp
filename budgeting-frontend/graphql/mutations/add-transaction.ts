@@ -14,7 +14,6 @@ const ADD_TRANSACTION = gql(/* GraphQL */ `
       transactionDetails {
         category
         amount
-        categoryGroup
         payee
       }
     }

@@ -1,7 +1,9 @@
 import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from "type-graphql";
+import UpdateAccountInput from "../schema/account/updateAccount.input";
 import Transaction from "../schema/transaction.schema";
 import AddTransactionInput from "../schema/transaction/addTransaction.input";
 import QueryTransactionsInput from "../schema/transaction/queryTransactions.input";
+import UpdateTransactionInput from "../schema/transaction/updateTransactionInput";
 import TransactionService from "../service/transaction.service";
 import Context from "../types/context";
 
@@ -25,5 +27,21 @@ export default class TransactionResolver {
     @Query(() => [Transaction])
     getTransactionsFromAccount(@Ctx() context: Context, @Arg("accountId") accountId: string) {
         return TransactionService.getTransactionsFromAccount(context.user, accountId);
+    }
+
+    @Authorized("admin", "user")
+    @Mutation(() => Transaction)
+    updateTransaction(@Arg("transaction") transaction: UpdateTransactionInput) {
+        return TransactionService.updateTransaction(transaction);
+    }
+
+    @Authorized("admin", "user")
+    @Mutation(() => Transaction)
+    deleteTransaction(
+        @Arg("transactionId") transactionId: string,
+        @Arg("accountId") accountId: string,
+        @Ctx() context: Context
+    ) {
+        return TransactionService.deleteTransaction(transactionId, accountId, context);
     }
 }

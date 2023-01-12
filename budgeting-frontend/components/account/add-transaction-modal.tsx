@@ -5,11 +5,11 @@ import { FormErrors, useForm } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { IconX } from "@tabler/icons";
 import { FormEvent, forwardRef, ReactElement, useContext, useImperativeHandle, useState } from "react";
-import ADD_TRANSACTION from "../graphql/mutations/add-transaction";
-import GET_ME from "../graphql/queries/get-me";
-import GET_TRANSACTIONS_FROM_ACCOUNT from "../graphql/queries/get-transactions-from-account";
-import { AddTransactionDetailInput, AddTransactionInput } from "../graphql/__generated__/graphql";
-import { UserContext } from "../layouts/shell";
+import ADD_TRANSACTION from "../../graphql/mutations/add-transaction";
+import GET_ME from "../../graphql/queries/get-me";
+import GET_TRANSACTIONS_FROM_ACCOUNT from "../../graphql/queries/get-transactions-from-account";
+import { AddTransactionDetailInput, AddTransactionInput, CategoryGroups } from "../../graphql/__generated__/graphql";
+import { UserContext } from "../../layouts/shell";
 
 export type AddTransactionModalHandler = {
   toggleOpen: () => void;
@@ -21,29 +21,44 @@ export type AddTransactionModalProps = {
 };
 
 type AddTransactionModalInput = Pick<AddTransactionInput, "date"> &
-  Pick<AddTransactionDetailInput, "amount" | "category" | "categoryGroup" | "payee">;
+  Pick<AddTransactionDetailInput, "amount" | "category" | "payee"> & { categoryGroup: string };
 
 const useStyles = createStyles(theme => ({
-  weekend: {
-    color: `${theme.black} !important`,
-  },
-
   selected: {
     color: `${theme.white} !important`,
     backgroundColor: `${theme.black} !important`,
   },
 }));
 
+type SelectType = {
+  value: string;
+  label: string;
+};
+
 const AddTransactionModal = forwardRef<AddTransactionModalHandler, AddTransactionModalProps>(
   ({ children, accountId }, refs) => {
-    const [opened, setOpened] = useState(false);
-    const [addTransactionMutation, { loading }] = useMutation(ADD_TRANSACTION);
     const user = useContext(UserContext);
+    const [opened, setOpened] = useState(false);
     const { classes, cx } = useStyles();
 
-    const availableCategories = user?.categories.map(value => ({ value, label: value })) ?? [];
-    const availableCategoryGroups = user?.categoryGroups.map(value => ({ value, label: value })) ?? [];
-    const [availablePayees, setPayees] = useState(user?.payees.map(value => ({ value, label: value })) ?? []);
+    const availableCategoryGroups = user
+      ? user.categoryGroups.map(group => ({ value: group.categoryGroup, label: group.categoryGroup }))
+      : [{ value: "Not Available", label: "Not Available" }];
+    const initialSelectedCategoryGroup =
+      user && user.categoryGroups[0] ? user.categoryGroups[0].categoryGroup : "Not Available";
+    const initialAvailableCategories =
+      user && user.categoryGroups[0]
+        ? user.categoryGroups[0].categories.map(category => ({ value: category, label: category }))
+        : [{ value: "Not Available", label: "Not Available" }];
+    const initialAvailablePayees = user
+      ? user.payees.map(payee => ({ value: payee, label: payee }))
+      : [{ value: "Not Available", label: "Not Available " }];
+
+    const [selectedCategoryGroup, setSelectedCategoryGroup] = useState<string>(initialSelectedCategoryGroup);
+    const [availableCategories, setAvailableCategories] = useState<SelectType[]>(initialAvailableCategories);
+    const [availablePayees, setPayees] = useState<SelectType[]>(initialAvailablePayees);
+
+    const [addTransactionMutation, { loading }] = useMutation(ADD_TRANSACTION);
 
     const toggleOpen = () => {
       setOpened(o => !o);
@@ -57,27 +72,15 @@ const AddTransactionModal = forwardRef<AddTransactionModalHandler, AddTransactio
       initialValues: {
         date: new Date(),
         amount: 0,
-        category:
-          availableCategories && availableCategories.length > 0
-            ? availableCategories[0].value
-            : "No available categories",
-        categoryGroup:
-          availableCategoryGroups && availableCategoryGroups.length > 0
-            ? availableCategoryGroups[0].value
-            : "No available category groups",
-        payee:
-          availablePayees && availablePayees.length > 0 ? availablePayees[0].value : "No available category groups",
+        categoryGroup: selectedCategoryGroup,
+        category: initialAvailableCategories[0].value,
+        payee: availablePayees[0].value,
       },
       validate: {
         amount: value =>
           value === undefined ? "Must have an amount" : isNaN(value) ? "Amount must be a number" : null,
-        category: value =>
-          !!availableCategories?.find(category => category.value === value) ? null : "Invalid category.",
-        categoryGroup: value =>
-          !!availableCategoryGroups?.find(categoryGroup => categoryGroup.value === value)
-            ? null
-            : "Invalid category group",
-        payee: value => (!!availablePayees?.find(payee => payee.value === value) ? null : "Invalid payee"),
+        // categoryGroup: , // TODO: Validate
+        // category: , // TODO: Validate
       },
     });
 
@@ -121,11 +124,11 @@ const AddTransactionModal = forwardRef<AddTransactionModalHandler, AddTransactio
         currency: account.currency ?? "CAD",
         reconciled: false,
         scheduled: false,
+        cleared: false,
         transactionDetails: [
           {
             amount: parsedAmount,
             category: values.category,
-            categoryGroup: values.categoryGroup,
             payee: values.payee,
           },
         ],
@@ -159,6 +162,19 @@ const AddTransactionModal = forwardRef<AddTransactionModalHandler, AddTransactio
       console.log(validationErrors);
     };
 
+    const handleCategoryGroupChange = (newCategoryGroup: string) => {
+      setSelectedCategoryGroup(newCategoryGroup);
+
+      const newCategoryGroupFromUser =
+        user && user.categoryGroups.find(group => group.categoryGroup === newCategoryGroup);
+      const newAvailableCategories = newCategoryGroupFromUser
+        ? newCategoryGroupFromUser.categories.map(category => ({ value: category, label: category }))
+        : [{ value: "Not Available", label: "Not Available" }];
+
+      form.setFieldValue("category", "");
+      setAvailableCategories(newAvailableCategories);
+    };
+
     return (
       <>
         {children}
@@ -179,7 +195,6 @@ const AddTransactionModal = forwardRef<AddTransactionModalHandler, AddTransactio
                   firstDayOfWeek="sunday"
                   dayClassName={(date, modifiers) =>
                     cx({
-                      [classes.weekend]: modifiers.weekend,
                       [classes.selected]: modifiers.selected,
                     })
                   }
@@ -207,7 +222,8 @@ const AddTransactionModal = forwardRef<AddTransactionModalHandler, AddTransactio
                   label="Category Group"
                   placeholder="Choose A Category Group"
                   data={availableCategoryGroups}
-                  {...form.getInputProps("categoryGroup")}
+                  value={selectedCategoryGroup}
+                  onChange={handleCategoryGroupChange}
                 />
 
                 {/* Category */}

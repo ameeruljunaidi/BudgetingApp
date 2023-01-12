@@ -6,10 +6,6 @@ import Account from "./account.schema";
 export class TransactionDetail {
     @Field(() => String)
     @prop({ required: true })
-    categoryGroup: string;
-
-    @Field(() => String)
-    @prop({ required: true })
     category: String;
 
     @Field(() => String)
@@ -53,6 +49,10 @@ export default class Transaction {
     @Field(() => Boolean)
     @prop({ required: true, default: true })
     approved: boolean;
+
+    @Field(() => Boolean)
+    @prop({ required: true, default: false })
+    cleared: boolean;
 
     @Field(() => String)
     @prop({ required: true })

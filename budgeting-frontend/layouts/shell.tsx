@@ -23,7 +23,7 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 
 // Components
-import AddAccountModal, { AddAccountModalHandler } from "../components/add-account-modal";
+import AddAccountModal, { AddAccountModalHandler } from "../components/account/add-account-modal";
 import ClientOnly from "../components/client-only";
 
 // Graphql

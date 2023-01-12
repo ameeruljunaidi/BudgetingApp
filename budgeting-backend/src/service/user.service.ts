@@ -10,10 +10,13 @@ import path from "path";
 
 import myLogger from "../utils/logger";
 import getPagination from "./pagination.service";
+import Account from "../schema/account.schema";
+import CategoryGroups from "../schema/category.schema";
 
 const logger = myLogger(path.basename(__filename));
 
-export const getUserById = async (userId: string): Promise<User> => {
+// Get the lean version of user, error is thrown if user cannot be found
+const getUserById = async (userId: string): Promise<User> => {
     const user = await UserModel.findById(userId).lean();
     if (!user) throw new GraphQLError("Cannot find user in DB");
 
@@ -23,7 +26,12 @@ export const getUserById = async (userId: string): Promise<User> => {
 };
 
 const createUser = async (input: CreateUserInput): Promise<User> => {
-    return UserModel.create({ ...input });
+    type UserToAdd = CreateUserInput & { categoryGroups: CategoryGroups[] };
+    const userToAdd: UserToAdd = {
+        ...input,
+        categoryGroups: [{ categoryGroup: "Main Category Group", categories: ["Main Category"] }],
+    };
+    return UserModel.create({ ...userToAdd });
 };
 
 const login = async (input: LoginInput, _context: Context): Promise<string> => {
@@ -85,11 +93,50 @@ const updateUser = async (updatedUser: User): Promise<User> => {
     const returnedUpdatedUser = await UserModel.findByIdAndUpdate(updatedUser._id, updatedUser, { new: true });
     if (!returnedUpdatedUser) throw new GraphQLError("Error updating user to the DB");
 
-    logger.info(returnedUpdatedUser, "Returned updated user from db is:");
-
     return returnedUpdatedUser;
+};
+
+const getAccountById = (user: User, accountId: string): Account => {
+    const account = user.accounts.find((account) => account._id.toString() === accountId);
+    if (!account) throw new GraphQLError("Cannot find account to reconcile.");
+    return account;
+};
+
+const addCategoryGroup = async (categoryGroup: string, userId: string): Promise<CategoryGroups[]> => {
+    const newCategoryGroup: CategoryGroups = { categoryGroup: categoryGroup, categories: [] };
+    const user = await getUserById(userId);
+    const newCategoryGroups: CategoryGroups[] = user.categoryGroups.concat(newCategoryGroup);
+    await updateUser({ ...user, categoryGroups: newCategoryGroups });
+    return newCategoryGroups;
+};
+
+const addCategory = async (categoryGroup: string, category: string, userId: string): Promise<CategoryGroups[]> => {
+    const user = await getUserById(userId);
+
+    const findGroup = user.categoryGroups.find((group) => group.categoryGroup === categoryGroup);
+    if (!findGroup) throw new GraphQLError("Cannot find category group to add category to.");
+
+    const updatedUser = {
+        ...user,
+        categoryGroups: user.categoryGroups.map((group) =>
+            group.categoryGroup !== categoryGroup ? group : { ...group, categories: group.categories.concat(category) }
+        ),
+    };
+    await updateUser(updatedUser);
+    return updatedUser.categoryGroups;
 };
 
 const getUsersPaginated = getPagination<User>(UserModel);
 
-export default { getUserById, createUser, login, getUsers, deleteUser, updateUser, getUsersPaginated };
+export default {
+    getUserById,
+    createUser,
+    login,
+    getUsers,
+    deleteUser,
+    updateUser,
+    getUsersPaginated,
+    getAccountById,
+    addCategoryGroup,
+    addCategory,
+};

@@ -1,20 +1,20 @@
 import { gql } from "../__generated__";
 
 const GET_TRANSACTIONS_FROM_ACCOUNT = gql(/* GraphQL */ `
-  query GetTransactionsFromAccount($accountId: String!) {
+  query getTransactionsFromAccount($accountId: String!) {
     getTransactionsFromAccount(accountId: $accountId) {
       _id
-      date
       account
       approved
+      cleared
+      date
       currency
       reconciled
-      scheduled
       scheduledDates
+      scheduled
       transactionDetails {
         amount
         category
-        categoryGroup
         payee
       }
     }

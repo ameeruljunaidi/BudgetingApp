@@ -1,11 +1,11 @@
 import { FormEvent, forwardRef, ReactElement, useEffect, useImperativeHandle, useState } from "react";
 import { Button, Center, Container, Loader, Modal, Select, Stack, TextInput } from "@mantine/core";
 import { FormErrors, useForm } from "@mantine/form";
-import { AddAccountInput } from "../graphql/__generated__/graphql";
+import { AddAccountInput } from "../../graphql/__generated__/graphql";
 import { useRouter } from "next/router";
 import { useMutation } from "@apollo/client";
-import ADD_ACCOUNT from "../graphql/mutations/add-account";
-import GET_ME from "../graphql/queries/get-me";
+import ADD_ACCOUNT from "../../graphql/mutations/add-account";
+import GET_ME from "../../graphql/queries/get-me";
 import { showNotification } from "@mantine/notifications";
 
 export type AddAccountModalHandler = {
@@ -18,13 +18,8 @@ type AddAccountModalProps = {
 
 const AddAccountModal = forwardRef<AddAccountModalHandler, AddAccountModalProps>(({ children }, refs) => {
   const [opened, setOpened] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [addAccountMutation, { data, loading, error }] = useMutation(ADD_ACCOUNT);
   const router = useRouter();
-
-  useEffect(() => {
-    setIsLoading(loading);
-  }, [loading]);
 
   const form = useForm({
     initialValues: {
@@ -79,8 +74,6 @@ const AddAccountModal = forwardRef<AddAccountModalHandler, AddAccountModalProps>
       onError: error => console.error(error.graphQLErrors[0].message),
       refetchQueries: [{ query: GET_ME }],
     });
-
-    router.push("/shell/accounts");
   };
 
   const validateInfo = (validationErrors: FormErrors, _values: AddAccountInput, _event: FormEvent<HTMLFormElement>) => {
@@ -91,7 +84,7 @@ const AddAccountModal = forwardRef<AddAccountModalHandler, AddAccountModalProps>
     <>
       {children}
       <Modal opened={opened} onClose={() => setOpened(false)} title="Add an Account" centered>
-        {isLoading ? (
+        {loading ? (
           <Center>
             <Loader />
           </Center>

@@ -14,11 +14,15 @@ const GET_ME = gql(/* GraphQL */ `
         reconciled
         name
         transactions
-        type
         balance
+        lastReconciled
+        reconciledBalance
+        type
       }
-      categories
-      categoryGroups
+      categoryGroups {
+        categoryGroup
+        categories
+      }
       payees
     }
   }

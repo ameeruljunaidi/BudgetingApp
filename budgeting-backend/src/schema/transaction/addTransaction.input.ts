@@ -1,4 +1,6 @@
+import { Ref } from "@typegoose/typegoose";
 import { Field, InputType } from "type-graphql";
+import Account from "../account.schema";
 import AddTransactionDetailInput from "../transactionDetail/transactionDetail.input";
 
 @InputType()
@@ -10,7 +12,7 @@ export default class AddTransactionInput {
     scheduled: boolean;
 
     @Field(() => String)
-    account: String;
+    account: Ref<Account, string>;
 
     @Field(() => [AddTransactionDetailInput])
     transactionDetails: AddTransactionDetailInput[];
@@ -23,4 +25,7 @@ export default class AddTransactionInput {
 
     @Field(() => String)
     currency: string;
+
+    @Field(() => Boolean)
+    cleared: boolean;
 }
