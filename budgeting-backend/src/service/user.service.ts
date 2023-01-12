@@ -26,10 +26,14 @@ const getUserById = async (userId: string): Promise<User> => {
 };
 
 const createUser = async (input: CreateUserInput): Promise<User> => {
-    type UserToAdd = CreateUserInput & { categoryGroups: CategoryGroups[] };
+    type UserToAdd = CreateUserInput & { categoryGroups: CategoryGroups[]; payees: string[] };
     const userToAdd: UserToAdd = {
         ...input,
-        categoryGroups: [{ categoryGroup: "Main Category Group", categories: ["Main Category"] }],
+        categoryGroups: [
+            { categoryGroup: "Main Category Group", categories: ["Main Category"] },
+            { categoryGroup: "Reconciler", categories: ["Reconciler"] },
+        ],
+        payees: ["Main Payee", "Reconciler"],
     };
     return UserModel.create({ ...userToAdd });
 };

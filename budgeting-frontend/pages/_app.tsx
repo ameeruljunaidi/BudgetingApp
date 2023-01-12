@@ -6,6 +6,7 @@ import { NextPage } from "next";
 import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { NotificationsProvider } from "@mantine/notifications";
+import ReconcileAccountModal from "../components/account/reconcile-account-modal";
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -19,22 +20,24 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
   const getLayout = Component.getLayout ?? (page => page);
 
   return (
-    <MantineProvider
-      withGlobalStyles
-      withNormalizeCSS
-      theme={{
-        colorScheme: "light",
-        fontFamily: "Helvetica",
-        spacing: { xs: 15, sm: 20, md: 25, lg: 30, xl: 40 },
-      }}>
-      <NotificationsProvider>
-        <ModalsProvider labels={{ confirm: "Submit", cancel: "Cancel" }}>
-          <ApolloProvider client={client}>
+    <ApolloProvider client={client}>
+      <MantineProvider
+        withGlobalStyles
+        withNormalizeCSS
+        theme={{
+          colorScheme: "light",
+          fontFamily: "Helvetica",
+          spacing: { xs: 15, sm: 20, md: 25, lg: 30, xl: 40 },
+        }}>
+        <NotificationsProvider>
+          <ModalsProvider
+            modals={{ reconcileAccount: ReconcileAccountModal }}
+            labels={{ confirm: "Submit", cancel: "Cancel" }}>
             {/* Get the layout of the page */}
             {getLayout(<Component {...pageProps} />)}
-          </ApolloProvider>
-        </ModalsProvider>
-      </NotificationsProvider>
-    </MantineProvider>
+          </ModalsProvider>
+        </NotificationsProvider>
+      </MantineProvider>
+    </ApolloProvider>
   );
 }

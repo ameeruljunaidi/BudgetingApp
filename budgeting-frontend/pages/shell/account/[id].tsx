@@ -1,4 +1,4 @@
-import { useQuery } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import { Button, Center, Container, Flex, Group, Loader, Paper, Space, Text } from "@mantine/core";
 import { useViewportSize } from "@mantine/hooks";
 import { useRouter } from "next/router";
@@ -10,6 +10,7 @@ import { UserContext } from "../../../layouts/shell";
 import TransactionsTable from "../../../components/account/transactions-table";
 import { Transaction } from "../../../graphql/__generated__/graphql";
 import TransactionsHeader from "../../../components/account/transaction-header";
+import { openContextModal } from "@mantine/modals";
 
 const AccountPage: NextPageWithLayout = () => {
   const router = useRouter();
@@ -17,7 +18,11 @@ const AccountPage: NextPageWithLayout = () => {
   const { height, width } = useViewportSize();
   const user = useContext(UserContext);
 
-  const { data, loading, error } = useQuery(GET_TRANSACTIONS_FROM_ACCOUNT, {
+  const {
+    data: transactionsData,
+    loading: transactionsLoading,
+    error: transactionsError,
+  } = useQuery(GET_TRANSACTIONS_FROM_ACCOUNT, {
     variables: { accountId },
     skip: !accountId,
   });
@@ -32,7 +37,7 @@ const AccountPage: NextPageWithLayout = () => {
 
   const account = user.accounts.find(account => account?._id === accountId);
 
-  if (loading) {
+  if (!transactionsData) {
     return (
       <Center h={height} w={width}>
         <Loader />
@@ -40,15 +45,25 @@ const AccountPage: NextPageWithLayout = () => {
     );
   }
 
-  if (error) {
+  if (transactionsError) {
     return (
       <Center h={height} w={width}>
-        <Text>Account not found. {error.graphQLErrors[0].message}</Text>
+        <Text>Account not found. {transactionsError.graphQLErrors[0].message}</Text>
       </Center>
     );
   }
 
-  const transactions: Transaction[] = data?.getTransactionsFromAccount ?? [];
+  const transactions: Transaction[] = transactionsData?.getTransactionsFromAccount ?? [];
+
+  const reconcileAccount = (accountId: string) => {
+    openContextModal({
+      modal: "reconcileAccount",
+      title: "Reconcile Account",
+      innerProps: {
+        accountId: accountId,
+      },
+    });
+  };
 
   return (
     <Container>
@@ -74,7 +89,9 @@ const AccountPage: NextPageWithLayout = () => {
                 Last reconciled: {new Date(Date.parse(account?.lastReconciled)).toLocaleDateString("en-GB")}
               </Text>
             </Container>
-            <Button bg="black">Reconcile</Button>
+            <Button bg="black" onClick={() => reconcileAccount(accountId)}>
+              Reconcile
+            </Button>
           </Flex>
         </Group>
       </Paper>

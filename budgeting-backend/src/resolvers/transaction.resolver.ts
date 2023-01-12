@@ -1,3 +1,4 @@
+import { GraphQLError } from "graphql";
 import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from "type-graphql";
 import UpdateAccountInput from "../schema/account/updateAccount.input";
 import Transaction from "../schema/transaction.schema";
@@ -31,8 +32,9 @@ export default class TransactionResolver {
 
     @Authorized("admin", "user")
     @Mutation(() => Transaction)
-    updateTransaction(@Arg("transaction") transaction: UpdateTransactionInput) {
-        return TransactionService.updateTransaction(transaction);
+    updateTransaction(@Arg("transaction") transaction: UpdateTransactionInput, @Ctx() context: Context) {
+        if (!context.user) throw new GraphQLError("User must be logged in to update transaction");
+        return TransactionService.updateTransaction(transaction, context.user._id);
     }
 
     @Authorized("admin", "user")

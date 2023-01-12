@@ -43,11 +43,11 @@ export default class User {
     accounts: Account[];
 
     @Field(() => [CategoryGroup], { defaultValue: [] })
-    @prop({ _id: false, required: true, type: () => [CategoryGroup], default: [] })
+    @prop({ _id: false, required: true, type: () => [CategoryGroup] })
     categoryGroups: CategoryGroup[];
 
     @Field(() => [String])
-    @prop({ required: true, type: () => [String], default: ["Main Payee"] })
+    @prop({ required: true, type: () => [String] })
     payees: string[];
 }
 

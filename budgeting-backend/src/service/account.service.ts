@@ -91,6 +91,7 @@ const reconcileAccount = async (accountId: string, userId: User["_id"], newBalan
 
     const updatedAccount: Account = {
         ...newAccount,
+        reconciled: true,
         reconciledBalance: newBalance,
         lastReconciled: new Date(),
     };

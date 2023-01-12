@@ -6,6 +6,7 @@ import { showNotification } from "@mantine/notifications";
 import { IconX } from "@tabler/icons";
 import { FormEvent, forwardRef, ReactElement, useContext, useImperativeHandle, useState } from "react";
 import UPDATE_TRANSACTION from "../../graphql/mutations/update-transaction";
+import GET_ME from "../../graphql/queries/get-me";
 import GET_TRANSACTIONS_FROM_ACCOUNT from "../../graphql/queries/get-transactions-from-account";
 import {
   UpdateTransactionInput,
@@ -152,7 +153,10 @@ const EditTransactionModal = forwardRef<EditTransactionModalHandler, EditTransac
 
       updateTransactionMutation({
         variables: { transaction: updatedTransaction },
-        refetchQueries: [{ query: GET_TRANSACTIONS_FROM_ACCOUNT, variables: { accountId: transaction.account } }],
+        refetchQueries: [
+          { query: GET_TRANSACTIONS_FROM_ACCOUNT, variables: { accountId: transaction.account } },
+          { query: GET_ME },
+        ],
         onCompleted: _data => {
           showNotification({ title: "Updated transaction", message: "Successfully updated transaction" });
         },

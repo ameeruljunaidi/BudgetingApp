@@ -133,13 +133,44 @@ const getTransactionsFromAccount = async (user: User | null, accountId: string):
     return transactions;
 };
 
-const updateTransaction = async (transaction: UpdateTransactionInput): Promise<Transaction> => {
+const updateTransaction = async (transaction: UpdateTransactionInput, userId: string): Promise<Transaction> => {
+    // Update transaction but get the old transaction first
+    const oldTransaction = await TransactionModel.findById(transaction.id).lean();
+    if (!oldTransaction) throw new GraphQLError("Cannot find transaction");
+
     const updatedTransaction: Transaction = { ...transaction, _id: transaction.id };
     const returnedTransactions = await TransactionModel.findByIdAndUpdate(updatedTransaction._id, updatedTransaction, {
         new: true,
     });
+
     if (!returnedTransactions) throw new GraphQLError("Error updating user to the DB");
-    logger.info("Transaction updated");
+    const newTransaction = returnedTransactions.toObject();
+
+    // Update the balance of the account on user
+
+    logger.info(oldTransaction, "Old transaction:");
+    logger.info(newTransaction, "New transaction:");
+
+    const difference =
+        newTransaction.transactionDetails.reduce((accum, detail) => accum + detail.amount, 0) -
+        oldTransaction.transactionDetails.reduce((accum, detail) => accum + detail.amount, 0);
+
+    const oldUser = await UserService.getUserById(userId);
+    const oldAccount = UserService.getAccountById(oldUser, newTransaction.account.toString());
+    const newAccount: Account = {
+        ...oldAccount,
+        balance: oldAccount.balance + difference,
+        reconciled: oldAccount.balance === oldAccount.balance + difference,
+    };
+    const newUser: User = {
+        ...oldUser,
+        accounts: oldUser.accounts.map((account) =>
+            account._id.toString() !== newAccount._id.toString() ? account : newAccount
+        ),
+    };
+
+    await UserService.updateUser(newUser);
+
     return returnedTransactions;
 };
 
@@ -148,9 +179,15 @@ const deleteTransaction = async (transactionId: string, accountId: string, conte
     if (!userFromContext) throw new GraphQLError("User must be logged in");
     const user = await UserService.getUserById(userFromContext._id);
 
+    const oldTransaction = await TransactionModel.findById(transactionId).lean();
+    if (!oldTransaction) throw new GraphQLError("Cannot find transaction to delete");
+
+    const difference = oldTransaction.transactionDetails.reduce((accum, detail) => accum + detail.amount, 0);
+
     const returnedTransaction = await TransactionModel.findByIdAndDelete(transactionId);
     if (!returnedTransaction) throw new GraphQLError("Failed to removed transaction");
 
+    // This is gnarly, need to refactor this
     await UserService.updateUser({
         ...user,
         accounts: user.accounts.map(
@@ -159,6 +196,7 @@ const deleteTransaction = async (transactionId: string, accountId: string, conte
                     ? account
                     : {
                           ...account,
+                          balance: account.balance - difference,
                           transactions: account.transactions.filter(
                               (transaction) => transaction.toString() !== transactionId
                           ),
