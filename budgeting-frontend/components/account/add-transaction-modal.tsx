@@ -38,21 +38,21 @@ type SelectType = {
 const AddTransactionModal = forwardRef<AddTransactionModalHandler, AddTransactionModalProps>(
   ({ children, accountId }, refs) => {
     const user = useContext(UserContext);
+    if (!user) throw new Error("User must be logged in");
+
     const [opened, setOpened] = useState(false);
     const { classes, cx } = useStyles();
 
-    const availableCategoryGroups = user
-      ? user.categoryGroups.map(group => ({ value: group.categoryGroup, label: group.categoryGroup }))
-      : [{ value: "Not Available", label: "Not Available" }];
-    const initialSelectedCategoryGroup =
-      user && user.categoryGroups[0] ? user.categoryGroups[0].categoryGroup : "Not Available";
-    const initialAvailableCategories =
-      user && user.categoryGroups[0]
-        ? user.categoryGroups[0].categories.map(category => ({ value: category, label: category }))
-        : [{ value: "Not Available", label: "Not Available" }];
-    const initialAvailablePayees = user
-      ? user.payees.map(payee => ({ value: payee, label: payee }))
-      : [{ value: "Not Available", label: "Not Available " }];
+    const availableCategoryGroups = user.categoryGroups.map(group => ({
+      value: group.categoryGroup,
+      label: group.categoryGroup,
+    }));
+    const initialSelectedCategoryGroup = user.categoryGroups[0].categoryGroup;
+    const initialAvailableCategories = user.categoryGroups[0].categories.map(category => ({
+      value: category,
+      label: category,
+    }));
+    const initialAvailablePayees = user.payees.map(payee => ({ value: payee, label: payee }));
 
     const [selectedCategoryGroup, setSelectedCategoryGroup] = useState<string>(initialSelectedCategoryGroup);
     const [availableCategories, setAvailableCategories] = useState<SelectType[]>(initialAvailableCategories);
@@ -165,11 +165,13 @@ const AddTransactionModal = forwardRef<AddTransactionModalHandler, AddTransactio
     const handleCategoryGroupChange = (newCategoryGroup: string) => {
       setSelectedCategoryGroup(newCategoryGroup);
 
-      const newCategoryGroupFromUser =
-        user && user.categoryGroups.find(group => group.categoryGroup === newCategoryGroup);
-      const newAvailableCategories = newCategoryGroupFromUser
-        ? newCategoryGroupFromUser.categories.map(category => ({ value: category, label: category }))
-        : [{ value: "Not Available", label: "Not Available" }];
+      const newCategoryGroupFromUser = user.categoryGroups.find(group => group.categoryGroup === newCategoryGroup);
+      if (!newCategoryGroupFromUser) throw new Error("Failed to find category group");
+
+      const newAvailableCategories = newCategoryGroupFromUser.categories.map(category => ({
+        value: category,
+        label: category,
+      }));
 
       form.setFieldValue("category", "");
       setAvailableCategories(newAvailableCategories);

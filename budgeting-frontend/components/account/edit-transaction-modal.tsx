@@ -42,25 +42,26 @@ type SelectType = {
 const EditTransactionModal = forwardRef<EditTransactionModalHandler, EditTransactionModalProps>(
   ({ children, transaction }, refs) => {
     const user = useContext(UserContext);
+    if (!user) throw new Error("User must be logged in");
+
     const [opened, setOpened] = useState(false);
     const { classes, cx } = useStyles();
 
-    const availableCategoryGroups = user
-      ? user.categoryGroups.map(group => ({ value: group.categoryGroup, label: group.categoryGroup }))
-      : [{ value: "Not Available", label: "Not Available" }];
-    const categoryGroupFromUser =
-      user &&
-      user.categoryGroups.find(group =>
-        group.categories.find(category => category === transaction.transactionDetails[0].category)
-      );
-    const initialSelectedCategoryGroup = categoryGroupFromUser ? categoryGroupFromUser.categoryGroup : "Not Available";
-    const initialAvailableCategories = categoryGroupFromUser
-      ? categoryGroupFromUser.categories.map(category => ({ value: category, label: category }))
-      : [{ value: "Not Available", label: "Not Available" }];
+    const categoryGroupFromUser = user.categoryGroups.find(group =>
+      group.categories.find(category => category === transaction.transactionDetails[0].category)
+    );
+    if (!categoryGroupFromUser) throw new Error("Cannot find category group from user");
 
-    const initialAvailablePayees = user
-      ? user.payees.map(payee => ({ value: payee, label: payee }))
-      : [{ value: "Not Available", label: "Not Available " }];
+    const availableCategoryGroups = user.categoryGroups.map(group => ({
+      value: group.categoryGroup,
+      label: group.categoryGroup,
+    }));
+    const initialSelectedCategoryGroup = categoryGroupFromUser.categoryGroup;
+    const initialAvailableCategories = categoryGroupFromUser.categories.map(category => ({
+      value: category,
+      label: category,
+    }));
+    const initialAvailablePayees = user.payees.map(payee => ({ value: payee, label: payee }));
 
     const [selectedCategoryGroup, setSelectedCategoryGroup] = useState<string>(initialSelectedCategoryGroup);
     const [availableCategories, setAvailableCategories] = useState<SelectType[]>(initialAvailableCategories);
@@ -180,11 +181,13 @@ const EditTransactionModal = forwardRef<EditTransactionModalHandler, EditTransac
     const handleCategoryGroupChange = (newCategoryGroup: string) => {
       setSelectedCategoryGroup(newCategoryGroup);
 
-      const newCategoryGroupFromUser =
-        user && user.categoryGroups.find(group => group.categoryGroup === newCategoryGroup);
-      const newAvailableCategories = newCategoryGroupFromUser
-        ? newCategoryGroupFromUser.categories.map(category => ({ value: category, label: category }))
-        : [{ value: "Not Available", label: "Not Available" }];
+      const newCategoryGroupFromUser = user.categoryGroups.find(group => group.categoryGroup === newCategoryGroup);
+      if (!newCategoryGroupFromUser) throw new Error("Cannot find category group from user");
+
+      const newAvailableCategories = newCategoryGroupFromUser.categories.map(category => ({
+        value: category,
+        label: category,
+      }));
 
       form.setFieldValue("category", "");
       setAvailableCategories(newAvailableCategories);

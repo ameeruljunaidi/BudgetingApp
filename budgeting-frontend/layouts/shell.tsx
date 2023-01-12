@@ -103,8 +103,26 @@ export default function Shell({ children }: { children: ReactElement }) {
   const runUserQuery = useQuery(GET_ME, { onCompleted: data => console.info("User set in context", data.me) });
   const { data: user, loading: userLoading, error: userError } = runUserQuery;
 
+  const shellRef = useRef<AddAccountModalHandler>(null);
+
+  if (userLoading) {
+    return (
+      <Center>
+        <Loader />
+      </Center>
+    );
+  }
+
+  if (!user || !user?.me || userError) {
+    return (
+      <ClientOnly>
+        <Text>Error: User Must be logged in</Text>
+      </ClientOnly>
+    );
+  }
+
   // Get list of accounts for collapsible buttons
-  const accounts = user?.me?.accounts.map(account => {
+  const accounts = user.me.accounts.map(account => {
     const currentAccountInPath = router.asPath.split("/")[3];
 
     return (
@@ -156,8 +174,6 @@ export default function Shell({ children }: { children: ReactElement }) {
       </div>
     );
   };
-
-  const shellRef = useRef<AddAccountModalHandler>(null);
 
   const sidebarLinks = user?.me?.role === "admin" ? links.concat({ link: "/shell/users", name: "Users" }) : links;
 
@@ -227,7 +243,7 @@ export default function Shell({ children }: { children: ReactElement }) {
           </Center>
         ) : (
           <main>
-            <UserContext.Provider value={user?.me ? user?.me : null}>{children}</UserContext.Provider>
+            <UserContext.Provider value={user.me}>{children}</UserContext.Provider>
           </main>
         )}
       </AppShell>
