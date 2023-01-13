@@ -2,13 +2,14 @@ import AddAccountInput from "../schema/account/addAccount.input";
 import DeleteAccountInput from "../schema/account/deleteAccount.input";
 import QueryAccountInput from "../schema/account/queryAccount.input";
 import UpdateAccountInput from "../schema/account/updateAccount.input";
-import User from "../schema/user.schema";
+import User, { UserModel } from "../schema/user.schema";
 import path from "path";
 import myLogger from "../utils/logger";
 import UserService from "./user.service";
 import Account from "../schema/account.schema";
 import { GraphQLDeprecatedDirective, GraphQLError } from "graphql";
-import transactionService from "./transaction.service";
+import TransactionService from "./transaction.service";
+import Transaction, { TransactionModel } from "../schema/transaction.schema";
 
 const logger = myLogger(path.basename(__filename));
 
@@ -54,7 +55,29 @@ const deleteAccount = async (input: DeleteAccountInput) => {};
 
 const updateAccount = async (input: UpdateAccountInput) => {};
 
-const reconcileAccount = async (accountId: string, userId: User["_id"], newBalance: number): Promise<Account> => {
+const convertClearedTransactions = async (accountId: Account["_id"], userId: User["_id"]): Promise<Transaction[]> => {
+    const user = await UserService.getUserById(userId);
+
+    const transactions = await TransactionService.getTransactionsFromAccount(user, accountId);
+    const updatedTransactions: Transaction[] = transactions
+        .filter((transaction) => transaction.cleared)
+        .map((transaction) => ({ ...transaction, reconciled: true }));
+
+    const updateTransactionsPromises = updatedTransactions.map((transaction) =>
+        TransactionModel.findByIdAndUpdate(transaction._id, transaction, { new: true })
+    );
+    const resolvedTransactionsDocs = await Promise.all(updateTransactionsPromises);
+    const resolvedTransactions = resolvedTransactionsDocs
+        .map((docs) => docs?.toObject() as Transaction)
+        .filter((transaction) => transaction);
+    return resolvedTransactions;
+};
+
+const reconcileAccount = async (
+    accountId: Account["_id"],
+    userId: User["_id"],
+    newBalance: number
+): Promise<Account> => {
     const user = await UserService.getUserById(userId);
     const account = UserService.getAccountById(user, accountId);
 
@@ -68,10 +91,11 @@ const reconcileAccount = async (accountId: string, userId: User["_id"], newBalan
             accounts: user.accounts.map((account) => (account._id.toString() !== accountId ? account : updatedAccount)),
         };
         const savedUser = await UserService.updateUser(updatedUser);
+        await convertClearedTransactions(accountId, userId);
         return UserService.getAccountById(savedUser, accountId);
     }
 
-    await transactionService.addTransaction({
+    await TransactionService.addTransaction({
         account: account.name,
         approved: true,
         cleared: true,
@@ -100,6 +124,8 @@ const reconcileAccount = async (accountId: string, userId: User["_id"], newBalan
         ...newUser,
         accounts: newUser.accounts.map((account) => (account._id.toString() !== accountId ? account : updatedAccount)),
     };
+
+    await convertClearedTransactions(accountId, userId);
 
     const savedUser = await UserService.updateUser(updatedUser);
     return UserService.getAccountById(savedUser, accountId);

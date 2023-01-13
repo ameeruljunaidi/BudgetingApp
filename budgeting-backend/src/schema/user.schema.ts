@@ -38,7 +38,7 @@ export default class User {
     @prop({ required: true, default: "user" })
     role: string;
 
-    @Field(() => [Account], { defaultValue: [], nullable: "items" })
+    @Field(() => [Account], { defaultValue: [] })
     @prop({ required: true, type: () => [Account] })
     accounts: Account[];
 
