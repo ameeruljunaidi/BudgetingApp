@@ -1,16 +1,18 @@
 import { useMutation } from "@apollo/client";
-import { ActionIcon, Group } from "@mantine/core";
+import { ActionIcon, Center, Group, Loader, Text } from "@mantine/core";
 import { openConfirmModal, openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import { IconCheckbox, IconEdit, IconTrash, IconX } from "@tabler/icons";
+import { memo } from "react";
 import DELETE_TRANSACTION from "../../graphql/mutations/delete-transaction";
 import UPDATE_TRANSACTION from "../../graphql/mutations/update-transaction";
 import GET_ME from "../../graphql/queries/get-me";
 import GET_TRANSACTIONS_FROM_ACCOUNT from "../../graphql/queries/get-transactions-from-account";
 import { Transaction, TransactionDetail, UpdateTransactionInput } from "../../graphql/__generated__/graphql";
+import useCurrency from "../../hooks/useCurrency";
 import EditTransactionModal from "./edit-transaction-modal";
 
-export default function TransactionRow({ transaction }: { transaction: Transaction }) {
+function TransactionRow({ transaction, accountCurrency }: { transaction: Transaction; accountCurrency: string }) {
   const date = new Date(Date.parse(transaction.date)).toLocaleDateString("en-GB");
   const [deleteTransactionMutation, { loading: loadingDelete }] = useMutation(DELETE_TRANSACTION);
   const [updateTransactionMutation, { loading: loadingUpdate, client: updateClient }] = useMutation(UPDATE_TRANSACTION);
@@ -21,6 +23,10 @@ export default function TransactionRow({ transaction }: { transaction: Transacti
     category: transactionDetails[0].category,
     payee: transactionDetails[0].payee,
   };
+
+  const amount = aggregateTransactionDetail.amount;
+
+  const [transactionAmount, flow] = useCurrency(amount, new Date(Date.parse(transaction.date)), accountCurrency);
 
   const handleClearTransaction = (transactionToUpdate: Transaction, accountId: string) => {
     const { __typename, _id, ...typenameRemoved } = transactionToUpdate;
@@ -89,12 +95,22 @@ export default function TransactionRow({ transaction }: { transaction: Transacti
   const categoryColumn =
     aggregateTransactionDetail.category === "Reconciler" ? "" : aggregateTransactionDetail.category;
 
+  // const flow = amount < 0 ? "outflow" : "inflow";
+  // const amountText = `${flow === "outflow" ? "(" : ""}${Math.abs(amount).toLocaleString("en-US", {
+  //   style: "currency",
+  //   currency: "USD",
+  // })}${flow === "outflow" ? ")" : ""}`;
+
   return (
     <tr key={transaction._id}>
       <td>{date}</td>
       <td>{payeeColumn}</td>
       <td>{categoryColumn}</td>
-      <td>{aggregateTransactionDetail.amount.toLocaleString("en-US", { style: "currency", currency: "USD" })}</td>
+      <td>
+        <Text color={transactionAmount === "Loading..." ? "black" : flow === "outflow" ? "red" : "black"}>
+          {transactionAmount}
+        </Text>
+      </td>
       <td>
         <Group spacing={4}>
           <ActionIcon
@@ -119,3 +135,5 @@ export default function TransactionRow({ transaction }: { transaction: Transacti
     </tr>
   );
 }
+
+export default memo(TransactionRow);

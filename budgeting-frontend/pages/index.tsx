@@ -1,14 +1,15 @@
-import { DatePicker } from "@mantine/dates";
+import { LoadingOverlay } from "@mantine/core";
 import { ReactElement, useState } from "react";
 import Landing from "../components/landing";
 import type { NextPageWithLayout } from "./_app";
 
 const Index: NextPageWithLayout = () => {
-  const [value, onChange] = useState<Date | null>(new Date());
-
-  console.log(value?.toISOString());
-
-  return <DatePicker value={value} onChange={onChange} />;
+  return (
+    <>
+      <LoadingOverlay visible={true} overlayBlur={2} />
+      <div>This is a test</div>
+    </>
+  );
   // return <div>Landing Page</div>;
 };
 

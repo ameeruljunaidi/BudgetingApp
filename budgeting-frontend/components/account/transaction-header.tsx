@@ -1,22 +1,23 @@
 import { Group, Paper, Button, TextInput, Flex, Text } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
+import { Account } from "../../graphql/__generated__/graphql";
 
 type TransactionsHeaderProps = {
-  accountId: string;
+  account: Account;
 };
-export default function TransactionsHeader({ accountId }: TransactionsHeaderProps) {
-  const handleAddTransaction = (accountId: string) => {
+export default function TransactionsHeader({ account }: TransactionsHeaderProps) {
+  const handleAddTransaction = (account: Account) => {
     openContextModal({
       modal: "addTransaction",
       title: "Add Transaction",
-      innerProps: { accountId },
+      innerProps: { account },
     });
   };
 
   return (
     <Paper bg="white" px="xs" py={8} withBorder>
       <Group position="apart">
-        <Button onClick={() => handleAddTransaction(accountId)} bg="black">
+        <Button onClick={() => handleAddTransaction(account)} bg="black">
           Add Transaction
         </Button>
         <div>

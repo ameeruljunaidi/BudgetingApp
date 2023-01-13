@@ -1,7 +1,20 @@
 import { useMutation } from "@apollo/client";
-import { Button, Center, createStyles, Loader, Modal, Select, Stack, TextInput } from "@mantine/core";
+import {
+  Button,
+  Center,
+  createStyles,
+  Flex,
+  Group,
+  Loader,
+  LoadingOverlay,
+  Modal,
+  Select,
+  Stack,
+  TextInput,
+} from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
 import { FormErrors, useForm } from "@mantine/form";
+import { useToggle } from "@mantine/hooks";
 import { ContextModalProps } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import { IconX } from "@tabler/icons";
@@ -9,11 +22,16 @@ import { FormEvent, forwardRef, ReactElement, useContext, useImperativeHandle, u
 import ADD_TRANSACTION from "../../graphql/mutations/add-transaction";
 import GET_ME from "../../graphql/queries/get-me";
 import GET_TRANSACTIONS_FROM_ACCOUNT from "../../graphql/queries/get-transactions-from-account";
-import { AddTransactionDetailInput, AddTransactionInput, CategoryGroups } from "../../graphql/__generated__/graphql";
+import {
+  Account,
+  AddTransactionDetailInput,
+  AddTransactionInput,
+  CategoryGroups,
+} from "../../graphql/__generated__/graphql";
 import { UserContext } from "../../layouts/shell";
 
 export type AddTransactionModalProps = {
-  accountId: string;
+  account: Account;
 };
 
 type AddTransactionModalInput = Pick<AddTransactionInput, "date"> &
@@ -35,7 +53,7 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
   const user = useContext(UserContext);
   if (!user) throw new Error("User must be logged in");
 
-  const { accountId } = innerProps;
+  const { account } = innerProps;
 
   const { classes, cx } = useStyles();
 
@@ -56,10 +74,12 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
 
   const [addTransactionMutation, { loading }] = useMutation(ADD_TRANSACTION);
 
+  const [flow, toggleFlow] = useToggle(["outflow", "inflow"] as const);
+
   const form = useForm<AddTransactionModalInput>({
     initialValues: {
       date: new Date(),
-      amount: 0,
+      amount: 0.0,
       categoryGroup: selectedCategoryGroup,
       category: initialAvailableCategories[0].value,
       payee: availablePayees[0].value,
@@ -72,20 +92,6 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
   });
 
   const addTransaction = (values: AddTransactionModalInput, _event: FormEvent<HTMLFormElement>) => {
-    if (!user) {
-      form.reset();
-      context.closeModal(id);
-      showNotification({
-        title: "Failed to add transaction.",
-        message: "Could not find user on file.",
-        color: "red",
-        icon: <IconX />,
-      });
-      return;
-    }
-
-    const account = user.accounts.find(account => account?._id === accountId); // Will throw error if not found
-
     if (!account) {
       form.reset();
       context.closeModal(id);
@@ -101,8 +107,13 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
     // prettier-ignore
     const parsedAmount = !values.amount ? 0
       : isNaN(values.amount) ? 0
-      : typeof values.amount === "string" ? parseInt(values.amount)
+      : typeof values.amount === "string" ? parseFloat(values.amount)
       : values.amount;
+
+    const amountWithFlow =
+      (flow === "inflow" && parsedAmount < 0) || (flow === "outflow" && parsedAmount > 0)
+        ? -parsedAmount
+        : parsedAmount;
 
     const newTransaction: AddTransactionInput = {
       date: values.date,
@@ -114,7 +125,7 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
       cleared: false,
       transactionDetails: [
         {
-          amount: parsedAmount,
+          amount: amountWithFlow,
           category: values.category,
           payee: values.payee,
         },
@@ -123,7 +134,10 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
 
     addTransactionMutation({
       variables: { input: newTransaction },
-      refetchQueries: [{ query: GET_TRANSACTIONS_FROM_ACCOUNT, variables: { accountId } }, { query: GET_ME }],
+      refetchQueries: [
+        { query: GET_TRANSACTIONS_FROM_ACCOUNT, variables: { accountId: account._id } },
+        { query: GET_ME },
+      ],
       onCompleted: _data => {
         showNotification({ title: "Added transaction", message: "Successfully added transaction to account" });
       },
@@ -166,6 +180,7 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
 
   return (
     <>
+      <LoadingOverlay visible={loading} overlayBlur={2} />
       <form onSubmit={form.onSubmit(addTransaction, validateInfo)}>
         <Stack spacing="xs">
           {/* Date */}
@@ -186,7 +201,7 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
           <Select
             label="Payee"
             placeholder="Choose A Payee"
-            data={availablePayees}
+            data={availablePayees.filter(payee => payee.value !== "Reconciler")}
             {...form.getInputProps("payee")}
             nothingFound="Nothing found"
             searchable
@@ -203,7 +218,7 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
           <Select
             label="Category Group"
             placeholder="Choose A Category Group"
-            data={availableCategoryGroups}
+            data={availableCategoryGroups.filter(group => group.value !== "Reconciler")}
             value={selectedCategoryGroup}
             onChange={handleCategoryGroupChange}
           />
@@ -212,12 +227,17 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
           <Select
             label="Category"
             placeholder="Choose A Category"
-            data={availableCategories}
+            data={availableCategories.filter(category => category.value !== "Reconciler")}
             {...form.getInputProps("category")}
           />
 
           {/* Amount */}
-          <TextInput type="number" label="Amount" {...form.getInputProps("amount")} />
+          <Group position="apart" grow align="flex-end">
+            <TextInput type="number" label={`Amount (${account.currency})`} {...form.getInputProps("amount")} />
+            <Button onClick={() => toggleFlow()} color={flow === "inflow" ? "blue" : "red"}>
+              {flow === "inflow" ? "Inflow" : "Outflow"}
+            </Button>
+          </Group>
 
           <Button bg="black" type="submit">
             Submit

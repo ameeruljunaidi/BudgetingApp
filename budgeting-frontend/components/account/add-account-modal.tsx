@@ -1,5 +1,5 @@
-import { FormEvent, forwardRef, ReactElement, useEffect, useImperativeHandle, useState } from "react";
-import { Button, Center, Container, Loader, Modal, Select, Stack, TextInput } from "@mantine/core";
+import { FormEvent, useContext } from "react";
+import { Button, LoadingOverlay, Select, Stack, TextInput } from "@mantine/core";
 import { FormErrors, useForm } from "@mantine/form";
 import { AddAccountInput } from "../../graphql/__generated__/graphql";
 import { useRouter } from "next/router";
@@ -8,10 +8,12 @@ import ADD_ACCOUNT from "../../graphql/mutations/add-account";
 import GET_ME from "../../graphql/queries/get-me";
 import { showNotification } from "@mantine/notifications";
 import { ContextModalProps } from "@mantine/modals";
+import { CurrencyContext } from "../../layouts/shell";
 
 type AddAccountModalProps = {};
 
 const AddAccountModal = ({ context, id, innerProps }: ContextModalProps<AddAccountModalProps>) => {
+  console.log("Add account modal");
   const [addAccountMutation, { data, loading, error }] = useMutation(ADD_ACCOUNT);
   const router = useRouter();
 
@@ -69,6 +71,7 @@ const AddAccountModal = ({ context, id, innerProps }: ContextModalProps<AddAccou
 
   return (
     <>
+      <LoadingOverlay visible={loading} overlayBlur={2} />
       <form onSubmit={form.onSubmit(addAccount, validateInfo)}>
         <Stack>
           {/* Name */}

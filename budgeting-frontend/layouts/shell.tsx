@@ -14,26 +14,29 @@ import {
   Box,
   Center,
   Loader,
+  NativeSelect,
+  Container,
+  Flex,
 } from "@mantine/core";
 import { useViewportSize } from "@mantine/hooks";
+import { ModalsProvider, openContextModal } from "@mantine/modals";
 
 // React
-import { ReactElement, useRef, createContext } from "react";
+import { ReactElement, createContext } from "react";
 import { useState } from "react";
 import { useRouter } from "next/router";
 
 // Components
-import AddAccountModal from "../components/account/add-account-modal";
 import ClientOnly from "../components/client-only";
-
-// Graphql
-import { useQuery } from "@apollo/client";
-import { User } from "../graphql/__generated__/graphql";
-import GET_ME from "../graphql/queries/get-me";
-import { ModalsProvider, openContextModal } from "@mantine/modals";
+import AddAccountModal from "../components/account/add-account-modal";
 import ReconcileAccountModal from "../components/account/reconcile-account-modal";
 import AddTransactionModal from "../components/account/add-transaction-modal";
 import EditTransactionModal from "../components/account/edit-transaction-modal";
+
+// Graphql
+import { useQuery } from "@apollo/client";
+import GET_ME from "../graphql/queries/get-me";
+import { User } from "../graphql/__generated__/graphql";
 
 const useStyles = createStyles((theme, _params, getRef) => {
   return {
@@ -87,6 +90,7 @@ const links = [
 ];
 
 export const UserContext = createContext<User | null>(null);
+export const CurrencyContext = createContext<string>("CAD");
 
 export default function Shell({ children }: { children: ReactElement }) {
   // Router
@@ -104,23 +108,35 @@ export default function Shell({ children }: { children: ReactElement }) {
   const [showAccounts, setShowAccount] = useState(false);
 
   // API calls
-  const runUserQuery = useQuery(GET_ME, { onCompleted: data => console.info("User set in context", data.me) });
-  const { data: user, loading: userLoading, error: userError } = runUserQuery;
+  const {
+    data: user,
+    loading: userLoading,
+    error: userError,
+  } = useQuery(GET_ME, {
+    onCompleted: data => {
+      if (!data.me) router.push("/unauthenticated");
+      else console.log("User logged in");
+    },
+    onError: error => {
+      console.error(error.graphQLErrors[0].message);
+      router.push("/unauthenticated");
+    },
+  });
+
+  // Currency
+  const [selectedCurrency, setSelectedCurrency] = useState<string>("CAD");
 
   if (userLoading) {
     return (
-      <Center>
+      <Center h={height} w={width}>
         <Loader />
       </Center>
     );
   }
 
   if (!user || !user?.me || userError) {
-    return (
-      <ClientOnly>
-        <Text>Error: User Must be logged in</Text>
-      </ClientOnly>
-    );
+    router.push("/unauthenticated");
+    return <></>;
   }
 
   // Get list of accounts for collapsible buttons
@@ -234,16 +250,25 @@ export default function Shell({ children }: { children: ReactElement }) {
                 />
               </MediaQuery>
 
-              <Text color="white" weight={700}>
-                Budgeting App
-              </Text>
+              <Group position="apart" w={width}>
+                <Text color="white" weight={700}>
+                  Budgeting App
+                </Text>
+                <Flex align="center" columnGap={10}>
+                  <Text color="white">Currency</Text>
+                  <NativeSelect
+                    data={["CAD", "USD", "MYR", "EUR", "GBP"]}
+                    value={selectedCurrency}
+                    onChange={event => setSelectedCurrency(event.currentTarget.value)}
+                  />
+                </Flex>
+              </Group>
             </div>
           </Header>
         }>
         {userLoading ? (
           <Center h={height} w={width}>
-            {" "}
-            <Loader />{" "}
+            <Loader />
           </Center>
         ) : userError ? (
           <Center h={height} w={width}>
@@ -252,16 +277,18 @@ export default function Shell({ children }: { children: ReactElement }) {
         ) : (
           <main>
             <UserContext.Provider value={user.me}>
-              <ModalsProvider
-                modals={{
-                  reconcileAccount: ReconcileAccountModal,
-                  addTransaction: AddTransactionModal,
-                  editTransaction: EditTransactionModal,
-                  addAccount: AddAccountModal,
-                }}
-                labels={{ confirm: "Submit", cancel: "Cancel" }}>
-                {children}
-              </ModalsProvider>
+              <CurrencyContext.Provider value={selectedCurrency}>
+                <ModalsProvider
+                  modals={{
+                    reconcileAccount: ReconcileAccountModal,
+                    addTransaction: AddTransactionModal,
+                    editTransaction: EditTransactionModal,
+                    addAccount: AddAccountModal,
+                  }}
+                  labels={{ confirm: "Submit", cancel: "Cancel" }}>
+                  {children}
+                </ModalsProvider>
+              </CurrencyContext.Provider>
             </UserContext.Provider>
           </main>
         )}

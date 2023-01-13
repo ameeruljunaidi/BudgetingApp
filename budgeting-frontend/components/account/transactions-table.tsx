@@ -1,12 +1,10 @@
-import { ActionIcon, Group, Table } from "@mantine/core";
-import { IconCheckbox, IconEdit, IconTrash } from "@tabler/icons";
-import { Transaction, TransactionDetail } from "../../graphql/__generated__/graphql";
-import { useRef } from "react";
-import EditTransactionModal, { EditTransactionModalHandler } from "./edit-transaction-modal";
+import { Table } from "@mantine/core";
+import { Transaction } from "../../graphql/__generated__/graphql";
 import TransactionRow from "./transaction-row";
 
 type TransactionTableProps = {
   transactions: Transaction[];
+  accountCurrency: string;
 };
 
 // const useStyles = createStyles(theme => {
@@ -21,7 +19,7 @@ type TransactionTableProps = {
 //     };
 // });
 
-export default function TransactionTable({ transactions }: TransactionTableProps) {
+export default function TransactionTable({ transactions, accountCurrency }: TransactionTableProps) {
   // const { classes } = useStyles();
 
   return (
@@ -37,7 +35,7 @@ export default function TransactionTable({ transactions }: TransactionTableProps
       </thead>
       <tbody>
         {transactions.map(transaction => {
-          return <TransactionRow key={transaction._id} transaction={transaction} />;
+          return <TransactionRow key={transaction._id} transaction={transaction} accountCurrency={accountCurrency} />;
         })}
       </tbody>
     </Table>

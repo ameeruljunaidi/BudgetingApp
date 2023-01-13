@@ -36,6 +36,7 @@ const AccountPage: NextPageWithLayout = () => {
   }
 
   const account = user.accounts.find(account => account?._id === accountId);
+  if (!account) throw new Error("Cannot find account from user");
 
   if (!transactionsData) {
     return (
@@ -59,9 +60,13 @@ const AccountPage: NextPageWithLayout = () => {
     openContextModal({
       modal: "reconcileAccount",
       title: "Reconcile Account",
-      innerProps: { accountId },
+      innerProps: { accountId, transactions },
     });
   };
+
+  const clearedBalance = transactions
+    .filter(transaction => transaction.cleared)
+    .reduce((total, transaction) => total + transaction.transactionDetails[0].amount, 0);
 
   return (
     <Container>
@@ -86,6 +91,9 @@ const AccountPage: NextPageWithLayout = () => {
               <Text size="sm">
                 Last reconciled: {new Date(Date.parse(account?.lastReconciled)).toLocaleDateString("en-GB")}
               </Text>
+              <Text size="sm">
+                Cleared Balance: {clearedBalance.toLocaleString("en-US", { style: "currency", currency: "USD" })}
+              </Text>
             </Container>
             <Button bg="black" onClick={() => reconcileAccount(accountId)}>
               Reconcile
@@ -94,9 +102,9 @@ const AccountPage: NextPageWithLayout = () => {
         </Group>
       </Paper>
       <Space h={8} />
-      <TransactionsHeader accountId={accountId} />
+      <TransactionsHeader account={account} />
       <Space h={8} />
-      <TransactionsTable transactions={transactions} />
+      <TransactionsTable transactions={transactions} accountCurrency={account.currency} />
     </Container>
   );
 };

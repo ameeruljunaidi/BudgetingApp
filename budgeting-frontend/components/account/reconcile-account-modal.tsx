@@ -1,17 +1,36 @@
 import { useMutation } from "@apollo/client";
-import { Button, Space, TextInput } from "@mantine/core";
+import { Button, LoadingOverlay, Space, TextInput } from "@mantine/core";
 import { FormErrors, useForm } from "@mantine/form";
 import { ContextModalProps } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import { IconX } from "@tabler/icons";
-import { FormEvent } from "react";
+import { FormEvent, useContext } from "react";
 import RECONCILE_ACCOUNT from "../../graphql/mutations/reconcile-account";
 import GET_TRANSACTIONS_FROM_ACCOUNT from "../../graphql/queries/get-transactions-from-account";
+import { Transaction } from "../../graphql/__generated__/graphql";
+import { UserContext } from "../../layouts/shell";
 
-export default function ReconcileAccountModal({ context, id, innerProps }: ContextModalProps<{ accountId: string }>) {
-  console.log("Reconcile account");
-  const [reconcileAccountMutation, { loading: accountLoading }] = useMutation(RECONCILE_ACCOUNT);
-  const { accountId } = innerProps;
+type ReconcileAccountModalProps = {
+  accountId: string;
+  transactions: Transaction[];
+};
+
+export default function ReconcileAccountModal({
+  context,
+  id,
+  innerProps,
+}: ContextModalProps<ReconcileAccountModalProps>) {
+  const [reconcileAccountMutation, { loading }] = useMutation(RECONCILE_ACCOUNT);
+  const { accountId, transactions } = innerProps;
+
+  const clearedBalance = transactions.reduce(
+    (total, transaction) =>
+      total +
+      (transaction.cleared
+        ? transaction.transactionDetails.reduce((current, detail) => current + detail.amount, 0)
+        : 0),
+    0
+  );
 
   type FormInput = {
     newBalance: number;
@@ -19,7 +38,7 @@ export default function ReconcileAccountModal({ context, id, innerProps }: Conte
 
   const form = useForm({
     initialValues: {
-      newBalance: 0,
+      newBalance: clearedBalance,
     },
     validate: {
       newBalance: value => (isNaN(value) ? "Balance must be a number" : null),
@@ -62,6 +81,7 @@ export default function ReconcileAccountModal({ context, id, innerProps }: Conte
 
   return (
     <>
+      <LoadingOverlay visible={loading} overlayBlur={2} />
       <form onSubmit={form.onSubmit(reconcileAccount, validateInfo)}>
         <TextInput
           type="number"

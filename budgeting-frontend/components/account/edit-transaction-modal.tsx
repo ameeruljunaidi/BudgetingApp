@@ -1,5 +1,5 @@
 import { useMutation } from "@apollo/client";
-import { Button, Center, createStyles, Loader, Modal, Select, Stack, TextInput } from "@mantine/core";
+import { Button, Center, createStyles, Loader, LoadingOverlay, Modal, Select, Stack, TextInput } from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
 import { FormErrors, useForm } from "@mantine/form";
 import { ContextModalProps } from "@mantine/modals";
@@ -120,7 +120,7 @@ export default function EditTransactionModal({
     // prettier-ignore
     const parsedAmount = !values.amount ? 0
       : isNaN(values.amount) ? 0
-      : typeof values.amount === "string" ? parseInt(values.amount)
+      : typeof values.amount === "string" ? parseFloat(values.amount)
       : values.amount;
 
     const updatedTransaction: UpdateTransactionInput = {
@@ -190,6 +190,7 @@ export default function EditTransactionModal({
 
   return (
     <>
+      <LoadingOverlay visible={loading} overlayBlur={2} />
       <form onSubmit={form.onSubmit(updateTransaction, validateInfo)}>
         <Stack spacing="xs">
           {/* Date */}
