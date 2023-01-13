@@ -26,7 +26,7 @@ function TransactionRow({ transaction, accountCurrency }: { transaction: Transac
 
   const amount = aggregateTransactionDetail.amount;
 
-  const [transactionAmount, flow] = useCurrency(amount, new Date(Date.parse(transaction.date)), accountCurrency);
+  const { printedAmount, flow } = useCurrency(amount, new Date(Date.parse(transaction.date)), accountCurrency);
 
   const handleClearTransaction = (transactionToUpdate: Transaction, accountId: string) => {
     const { __typename, _id, ...typenameRemoved } = transactionToUpdate;
@@ -107,8 +107,8 @@ function TransactionRow({ transaction, accountCurrency }: { transaction: Transac
       <td>{payeeColumn}</td>
       <td>{categoryColumn}</td>
       <td>
-        <Text color={transactionAmount === "Loading..." ? "black" : flow === "outflow" ? "red" : "black"}>
-          {transactionAmount}
+        <Text color={printedAmount === "Loading..." ? "black" : flow === "outflow" ? "red" : "black"}>
+          {printedAmount}
         </Text>
       </td>
       <td>

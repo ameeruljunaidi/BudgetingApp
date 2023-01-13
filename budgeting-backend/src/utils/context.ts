@@ -1,31 +1,33 @@
 import Context from "../types/context";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import config from "./config";
-import User, { UserModel } from "../schema/user.schema";
-import { verifyJwt } from "./jwt";
+import { UserModel } from "../schema/user.schema";
 import myLogger from "./logger";
 import path from "path";
 
 const logger = myLogger(path.basename(__filename));
 
 const context = async (ctx: Context) => {
-    const auth = ctx.req ? ctx.req.headers.authorization : null;
+    let context = ctx;
+    const auth = context.req ? context.req.headers.authorization : null;
 
-    if (auth && auth.toLowerCase().startsWith("bearer ")) {
+    if (auth && auth.toLowerCase().startsWith("bearer ") && process.env.NODE_ENV === "development") {
         const decodedToken = jwt.verify(auth.substring(7), config.JWT_SECRET) as JwtPayload;
 
         const user = await UserModel.findById(decodedToken._id);
-        ctx.user = user;
-        return ctx;
+        context.user = user;
+        return context;
     }
 
-    if (ctx.req.cookies.accessToken) {
-        const token = ctx.req.cookies.accessToken;
+    if (context.req.cookies.accessToken) {
+        const token = context.req.cookies.accessToken;
         const decodedToken = jwt.verify(token, config.JWT_SECRET) as JwtPayload;
         const user = await UserModel.findById(decodedToken._id);
-        ctx.user = user;
-        return ctx;
+        context.user = user;
+        return context;
     }
+
+    return context;
 };
 
 export default context;

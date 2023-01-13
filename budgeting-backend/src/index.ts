@@ -6,7 +6,7 @@ import { buildTypeDefsAndResolvers } from "type-graphql";
 // import { execute, subscribe } from "graphql";
 // import { WebSocketServer } from "ws";
 // import { useServer } from "graphql-ws/lib/use/ws";
-// import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
+import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -47,7 +47,7 @@ const logger = myLogger(path.basename(__filename));
         const server = new ApolloServer<Context>({
             schema,
             context,
-            introspection: true,
+            plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
         } as ApolloServerOptions<Context>);
 
         await server.start();

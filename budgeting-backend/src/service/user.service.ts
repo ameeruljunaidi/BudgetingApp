@@ -63,7 +63,8 @@ const login = async (input: LoginInput, context: Context): Promise<string> => {
 
     const token = jwt.sign(user, config.JWT_SECRET);
 
-    logger.info(token, "Token set");
+    logger.info("Token set");
+    logger.info(context, "Context:");
 
     context.res.cookie("accessToken", token, {
         maxAge: 3.154e10, // 1 year

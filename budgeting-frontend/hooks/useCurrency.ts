@@ -8,8 +8,9 @@ export default function useCurrency(
   amount: number,
   rawDate: Date,
   accountCurrency: Account["currency"]
-): [string, string] {
-  const [resultAmount, setResultAmount] = useState<string>("");
+): { printedAmount: string; transactionAmount: number; flow: string } {
+  const [transactionAmount, setTransactionAmount] = useState<number>(0);
+  const [printedAmount, setPrintedAmount] = useState<string>("");
 
   const globalCurrency = useContext(CurrencyContext);
 
@@ -38,16 +39,18 @@ export default function useCurrency(
 
   useEffect(() => {
     if (loading) {
-      setResultAmount("Loading...");
+      setPrintedAmount("Loading...");
     } else if (error || !data) {
       console.log("Error:", error?.graphQLErrors[0].message);
-      setResultAmount("Error");
+      setPrintedAmount("Error");
     } else {
-      setResultAmount(formatCurrency(amount * data.convertCurrency.result));
+      const finalAmount = amount * data.convertCurrency.result;
+      setPrintedAmount(formatCurrency(finalAmount));
+      setTransactionAmount(finalAmount);
     }
   }, [data, loading, error, amount, formatCurrency]);
 
   const flow = amount < 0 ? "outflow" : "inflow";
 
-  return [resultAmount, flow];
+  return { printedAmount, transactionAmount, flow };
 }

@@ -12,7 +12,10 @@ import DeleteAccountInput from "../schema/account/deleteAccount.input";
 import AccountService from "../service/account.service";
 import { GraphQLError } from "graphql";
 import CategoryGroups from "../schema/category.schema";
+import myLogger from "../utils/logger";
+import path from "path";
 
+const logger = myLogger(path.basename(__filename));
 @Resolver()
 export default class UserResolver {
     @Mutation(() => User)
@@ -22,6 +25,7 @@ export default class UserResolver {
 
     @Mutation(() => String)
     login(@Arg("input") input: LoginInput, @Ctx() context: Context) {
+        logger.info(context, "Context in resolver");
         return UserService.login(input, context);
     }
 
@@ -30,7 +34,6 @@ export default class UserResolver {
         return context.user;
     }
 
-    @Authorized("admin")
     @Query(() => [User])
     getUsers() {
         return UserService.getUsers();

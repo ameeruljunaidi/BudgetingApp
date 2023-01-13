@@ -37,6 +37,7 @@ import EditTransactionModal from "../components/account/edit-transaction-modal";
 import { useQuery } from "@apollo/client";
 import GET_ME from "../graphql/queries/get-me";
 import { User } from "../graphql/__generated__/graphql";
+import useCurrency from "../hooks/useCurrency";
 
 const useStyles = createStyles((theme, _params, getRef) => {
   return {

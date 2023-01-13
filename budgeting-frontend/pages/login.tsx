@@ -45,13 +45,16 @@ export default function Login() {
         }
       },
       onError: error => {
-        // showNotification({
-        //   title: "Failed to login",
-        //   message: `${error.graphQLErrors[0].message}`,
-        //   color: "red",
-        //   icon: <IconX />,
-        // });
-        console.error(error);
+        if (error.graphQLErrors[0].message) {
+          showNotification({
+            title: "Failed to login",
+            message: `${error.graphQLErrors[0].message}`,
+            color: "red",
+            icon: <IconX />,
+          });
+        } else {
+          console.error(error);
+        }
         form.reset();
       },
     });
