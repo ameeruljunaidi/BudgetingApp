@@ -5,6 +5,10 @@ import { LoginInput } from "../graphql/__generated__/graphql";
 import { useViewportSize } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { useMutation } from "@apollo/client";
+import LOGIN from "../graphql/mutations/login";
+import { showNotification } from "@mantine/notifications";
+import { IconX } from "@tabler/icons";
 
 export default function Login() {
   const { height, width } = useViewportSize();
@@ -20,15 +24,37 @@ export default function Login() {
     },
   });
 
+  const [login] = useMutation(LOGIN);
+
   const logIn = (values: LoginInput, _event: FormEvent<HTMLFormElement>) => {
-    // const { email, password } = values;
+    const { email, password } = values;
 
-    // if (email === "tom.cruise@gmail.com" && password === "testpassword") {
-    //     console.info("User logged in!");
-    //     form.reset();
-    // }
-
-    router.push("/shell/home");
+    login({
+      variables: { input: { email, password } },
+      onCompleted: data => {
+        if (data.login) {
+          router.push("/shell/home");
+        } else {
+          showNotification({
+            title: "Failed to login",
+            message: "Failed to login",
+            color: "red",
+            icon: <IconX />,
+          });
+          form.reset();
+        }
+      },
+      onError: error => {
+        // showNotification({
+        //   title: "Failed to login",
+        //   message: `${error.graphQLErrors[0].message}`,
+        //   color: "red",
+        //   icon: <IconX />,
+        // });
+        console.error(error);
+        form.reset();
+      },
+    });
   };
 
   const validateInfo = (validationErrors: FormErrors, _values: LoginInput, _event: FormEvent<HTMLFormElement>) => {

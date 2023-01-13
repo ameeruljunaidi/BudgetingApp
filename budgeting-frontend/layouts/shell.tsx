@@ -115,7 +115,7 @@ export default function Shell({ children }: { children: ReactElement }) {
   } = useQuery(GET_ME, {
     onCompleted: data => {
       if (!data.me) router.push("/unauthenticated");
-      else console.log("User logged in");
+      else console.log("User logged in", data.me);
     },
     onError: error => {
       console.error(error.graphQLErrors[0].message);

@@ -38,7 +38,7 @@ const createUser = async (input: CreateUserInput): Promise<User> => {
     return UserModel.create({ ...userToAdd });
 };
 
-const login = async (input: LoginInput, _context: Context): Promise<string> => {
+const login = async (input: LoginInput, context: Context): Promise<string> => {
     const user: User = await UserModel.findOne({ email: input.email }).lean();
 
     if (!user) {
@@ -62,7 +62,18 @@ const login = async (input: LoginInput, _context: Context): Promise<string> => {
     }
 
     const token = jwt.sign(user, config.JWT_SECRET);
-    logger.info("Password is valid, returning token.");
+
+    logger.info(token, "Token set");
+
+    context.res.cookie("accessToken", token, {
+        maxAge: 3.154e10, // 1 year
+        httpOnly: true,
+        domain: "localhost",
+        path: "/",
+        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production",
+    });
+
     return token;
 };
 
