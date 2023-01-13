@@ -1,4 +1,3 @@
-import { useRouter } from "next/router";
 import type { ReactElement } from "react";
 import Shell from "../../layouts/shell";
 import type { NextPageWithLayout } from "../_app";

@@ -1,11 +1,11 @@
-import { Avatar, Badge, Table, Group, Text, Select, ScrollArea } from "@mantine/core";
+import { Avatar, Group, ScrollArea, Table, Text } from "@mantine/core";
 
 interface UsersTableProps {
   data: { avatar: string; name: string; email: string; role: string }[];
 }
 
 export function UsersRolesTable({ data }: UsersTableProps) {
-  const rows = data.map(item => (
+  const rows = data.map((item) => (
     <tr key={item.name}>
       <td>
         <Group spacing="sm">

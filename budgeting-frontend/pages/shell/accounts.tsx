@@ -1,7 +1,6 @@
 import { useQuery } from "@apollo/client";
 import { Loader } from "@mantine/core";
 import type { ReactElement } from "react";
-import ClientOnly from "../../components/client-only";
 import Shell from "../../layouts/shell";
 import GET_ME from "../../graphql/queries/get-me";
 import type { NextPageWithLayout } from "../_app";

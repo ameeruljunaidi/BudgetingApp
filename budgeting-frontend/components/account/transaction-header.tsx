@@ -1,4 +1,4 @@
-import { Group, Paper, Button, TextInput, Flex, Text } from "@mantine/core";
+import { Button, Flex, Group, Paper, Text, TextInput } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { Account } from "../../graphql/__generated__/graphql";
 

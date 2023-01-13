@@ -34,7 +34,7 @@ export default function TransactionTable({ transactions, accountCurrency }: Tran
         </tr>
       </thead>
       <tbody>
-        {transactions.map(transaction => {
+        {transactions.map((transaction) => {
           return <TransactionRow key={transaction._id} transaction={transaction} accountCurrency={accountCurrency} />;
         })}
       </tbody>

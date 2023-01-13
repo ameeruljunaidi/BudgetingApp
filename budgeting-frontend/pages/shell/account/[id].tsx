@@ -1,12 +1,11 @@
-import { useMutation, useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client";
 import { Button, Center, Container, Flex, Group, Loader, Paper, Space, Text } from "@mantine/core";
 import { useViewportSize } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import { ReactElement, useContext } from "react";
-import Shell from "../../../layouts/shell";
+import Shell, { UserContext } from "../../../layouts/shell";
 import GET_TRANSACTIONS_FROM_ACCOUNT from "../../../graphql/queries/get-transactions-from-account";
 import type { NextPageWithLayout } from "../../_app";
-import { UserContext } from "../../../layouts/shell";
 import TransactionsTable from "../../../components/account/transactions-table";
 import { Transaction } from "../../../graphql/__generated__/graphql";
 import TransactionsHeader from "../../../components/account/transaction-header";
@@ -35,7 +34,7 @@ const AccountPage: NextPageWithLayout = () => {
     );
   }
 
-  const account = user.accounts.find(account => account?._id === accountId);
+  const account = user.accounts.find((account) => account?._id === accountId);
   if (!account) throw new Error("Cannot find account from user");
 
   if (!transactionsData) {
@@ -65,7 +64,7 @@ const AccountPage: NextPageWithLayout = () => {
   };
 
   const clearedBalance = transactions
-    .filter(transaction => transaction.cleared)
+    .filter((transaction) => transaction.cleared)
     .reduce((total, transaction) => total + transaction.transactionDetails[0].amount, 0);
 
   return (
@@ -86,13 +85,20 @@ const AccountPage: NextPageWithLayout = () => {
               <Text size="sm">Account Reconciled: {account?.reconciled ? "Yes" : "No"}</Text>
               <Text size="sm">
                 Reconciled Balance:{" "}
-                {account?.reconciledBalance.toLocaleString("en-US", { style: "currency", currency: "USD" })}
+                {account?.reconciledBalance.toLocaleString("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                })}
               </Text>
               <Text size="sm">
                 Last reconciled: {new Date(Date.parse(account?.lastReconciled)).toLocaleDateString("en-GB")}
               </Text>
               <Text size="sm">
-                Cleared Balance: {clearedBalance.toLocaleString("en-US", { style: "currency", currency: "USD" })}
+                Cleared Balance:{" "}
+                {clearedBalance.toLocaleString("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                })}
               </Text>
             </Container>
             <Button bg="black" onClick={() => reconcileAccount(accountId)}>

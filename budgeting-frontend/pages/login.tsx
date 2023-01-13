@@ -20,7 +20,7 @@ export default function Login() {
       password: "",
     },
     validate: {
-      email: value => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
+      email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
     },
   });
 
@@ -31,7 +31,7 @@ export default function Login() {
 
     login({
       variables: { input: { email, password } },
-      onCompleted: data => {
+      onCompleted: (data) => {
         if (data.login) {
           router.push("/shell/home");
         } else {
@@ -44,7 +44,7 @@ export default function Login() {
           form.reset();
         }
       },
-      onError: error => {
+      onError: (error) => {
         if (error.graphQLErrors[0].message) {
           showNotification({
             title: "Failed to login",

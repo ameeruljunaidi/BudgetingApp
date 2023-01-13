@@ -4,11 +4,10 @@ import { FormErrors, useForm } from "@mantine/form";
 import { ContextModalProps } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import { IconX } from "@tabler/icons";
-import { FormEvent, useContext } from "react";
+import { FormEvent } from "react";
 import RECONCILE_ACCOUNT from "../../graphql/mutations/reconcile-account";
 import GET_TRANSACTIONS_FROM_ACCOUNT from "../../graphql/queries/get-transactions-from-account";
 import { Transaction } from "../../graphql/__generated__/graphql";
-import { UserContext } from "../../layouts/shell";
 
 type ReconcileAccountModalProps = {
   accountId: string;
@@ -41,7 +40,7 @@ export default function ReconcileAccountModal({
       newBalance: clearedBalance,
     },
     validate: {
-      newBalance: value => (isNaN(value) ? "Balance must be a number" : null),
+      newBalance: (value) => (isNaN(value) ? "Balance must be a number" : null),
     },
   });
 
@@ -50,20 +49,20 @@ export default function ReconcileAccountModal({
 
     // prettier-ignore
     const newBalance = !rawBalance ? 0
-    : isNaN(rawBalance) ? 0
-    : typeof rawBalance === "string" ? parseInt(rawBalance)
-    : rawBalance;
+            : isNaN(rawBalance) ? 0
+                : typeof rawBalance === "string" ? parseInt(rawBalance)
+                    : rawBalance;
 
     reconcileAccountMutation({
       variables: { accountId, newBalance },
-      onCompleted: data => {
+      onCompleted: (data) => {
         showNotification({
           title: "Successfully reconciled account",
           message: `${data.reconcileAccount.name} reconciled!`,
         });
         context.closeModal(id);
       },
-      onError: error => {
+      onError: (error) => {
         showNotification({
           title: "Failed to reconcile account",
           message: `${error.graphQLErrors[0].message}`,

@@ -1,20 +1,15 @@
 import { useMutation } from "@apollo/client";
-import { Button, Center, createStyles, Loader, LoadingOverlay, Modal, Select, Stack, TextInput } from "@mantine/core";
+import { Button, createStyles, LoadingOverlay, Select, Stack, TextInput } from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
 import { FormErrors, useForm } from "@mantine/form";
 import { ContextModalProps } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import { IconX } from "@tabler/icons";
-import { FormEvent, forwardRef, ReactElement, useContext, useImperativeHandle, useState } from "react";
+import { FormEvent, useContext, useState } from "react";
 import UPDATE_TRANSACTION from "../../graphql/mutations/update-transaction";
 import GET_ME from "../../graphql/queries/get-me";
 import GET_TRANSACTIONS_FROM_ACCOUNT from "../../graphql/queries/get-transactions-from-account";
-import {
-  UpdateTransactionInput,
-  Transaction,
-  AddTransactionDetailInput,
-  CategoryGroups,
-} from "../../graphql/__generated__/graphql";
+import { AddTransactionDetailInput, Transaction, UpdateTransactionInput } from "../../graphql/__generated__/graphql";
 import { UserContext } from "../../layouts/shell";
 
 export type EditTransactionModalProps = {
@@ -24,7 +19,7 @@ export type EditTransactionModalProps = {
 type EditTransactionModalInput = Pick<UpdateTransactionInput, "date"> &
   Pick<AddTransactionDetailInput, "amount" | "category" | "payee"> & { categoryGroup: string };
 
-const useStyles = createStyles(theme => ({
+const useStyles = createStyles((theme) => ({
   selected: {
     color: `${theme.white} !important`,
     backgroundColor: `${theme.black} !important`,
@@ -48,21 +43,21 @@ export default function EditTransactionModal({
 
   const { classes, cx } = useStyles();
 
-  const categoryGroupFromUser = user.categoryGroups.find(group =>
-    group.categories.find(category => category === transaction.transactionDetails[0].category)
+  const categoryGroupFromUser = user.categoryGroups.find((group) =>
+    group.categories.find((category) => category === transaction.transactionDetails[0].category)
   );
   if (!categoryGroupFromUser) throw new Error("Cannot find category group from user");
 
-  const availableCategoryGroups = user.categoryGroups.map(group => ({
+  const availableCategoryGroups = user.categoryGroups.map((group) => ({
     value: group.categoryGroup,
     label: group.categoryGroup,
   }));
   const initialSelectedCategoryGroup = categoryGroupFromUser.categoryGroup;
-  const initialAvailableCategories = categoryGroupFromUser.categories.map(category => ({
+  const initialAvailableCategories = categoryGroupFromUser.categories.map((category) => ({
     value: category,
     label: category,
   }));
-  const initialAvailablePayees = user.payees.map(payee => ({ value: payee, label: payee }));
+  const initialAvailablePayees = user.payees.map((payee) => ({ value: payee, label: payee }));
 
   const [selectedCategoryGroup, setSelectedCategoryGroup] = useState<string>(initialSelectedCategoryGroup);
   const [availableCategories, setAvailableCategories] = useState<SelectType[]>(initialAvailableCategories);
@@ -79,14 +74,15 @@ export default function EditTransactionModal({
       payee: transaction.transactionDetails[0].payee,
     },
     validate: {
-      amount: value => (value === undefined ? "Must have an amount" : isNaN(value) ? "Amount must be a number" : null),
-      category: value =>
-        !!availableCategories?.find(category => category.value === value) ? null : "Invalid category.",
-      categoryGroup: value =>
-        !!availableCategoryGroups?.find(categoryGroup => categoryGroup.value === value)
+      amount: (value) =>
+        value === undefined ? "Must have an amount" : isNaN(value) ? "Amount must be a number" : null,
+      category: (value) =>
+        !!availableCategories?.find((category) => category.value === value) ? null : "Invalid category.",
+      categoryGroup: (value) =>
+        !!availableCategoryGroups?.find((categoryGroup) => categoryGroup.value === value)
           ? null
           : "Invalid category group",
-      payee: value => (!!availablePayees?.find(payee => payee.value === value) ? null : "Invalid payee"),
+      payee: (value) => (!!availablePayees?.find((payee) => payee.value === value) ? null : "Invalid payee"),
     },
   });
 
@@ -103,7 +99,7 @@ export default function EditTransactionModal({
       return;
     }
 
-    const account = user.accounts.find(account => account?._id === transaction.account); // Will throw error if not found
+    const account = user.accounts.find((account) => account?._id === transaction.account); // Will throw error if not found
 
     if (!account) {
       form.reset();
@@ -119,9 +115,9 @@ export default function EditTransactionModal({
 
     // prettier-ignore
     const parsedAmount = !values.amount ? 0
-      : isNaN(values.amount) ? 0
-      : typeof values.amount === "string" ? parseFloat(values.amount)
-      : values.amount;
+            : isNaN(values.amount) ? 0
+                : typeof values.amount === "string" ? parseFloat(values.amount)
+                    : values.amount;
 
     const updatedTransaction: UpdateTransactionInput = {
       id: transaction._id,
@@ -148,10 +144,10 @@ export default function EditTransactionModal({
         { query: GET_TRANSACTIONS_FROM_ACCOUNT, variables: { accountId: transaction.account } },
         { query: GET_ME },
       ],
-      onCompleted: _data => {
+      onCompleted: (_data) => {
         showNotification({ title: "Updated transaction", message: "Successfully updated transaction" });
       },
-      onError: error => {
+      onError: (error) => {
         showNotification({
           title: "Failed to update transaction.",
           message: `${error.graphQLErrors[0].message}`,
@@ -176,10 +172,10 @@ export default function EditTransactionModal({
   const handleCategoryGroupChange = (newCategoryGroup: string) => {
     setSelectedCategoryGroup(newCategoryGroup);
 
-    const newCategoryGroupFromUser = user.categoryGroups.find(group => group.categoryGroup === newCategoryGroup);
+    const newCategoryGroupFromUser = user.categoryGroups.find((group) => group.categoryGroup === newCategoryGroup);
     if (!newCategoryGroupFromUser) throw new Error("Cannot find category group from user");
 
-    const newAvailableCategories = newCategoryGroupFromUser.categories.map(category => ({
+    const newAvailableCategories = newCategoryGroupFromUser.categories.map((category) => ({
       value: category,
       label: category,
     }));
@@ -196,7 +192,7 @@ export default function EditTransactionModal({
           {/* Date */}
           <DatePicker
             value={form.values.date}
-            onChange={value => form.setFieldValue("date", value)}
+            onChange={(value) => form.setFieldValue("date", value)}
             label="Transaction Date"
             firstDayOfWeek="sunday"
             dayClassName={(date, modifiers) =>
@@ -214,10 +210,10 @@ export default function EditTransactionModal({
             nothingFound="Nothing found"
             searchable
             creatable
-            getCreateLabel={query => `+ Create ${query}`}
-            onCreate={query => {
+            getCreateLabel={(query) => `+ Create ${query}`}
+            onCreate={(query) => {
               const item = { value: query, label: query };
-              setPayees(current => [...current, item]);
+              setPayees((current) => [...current, item]);
               return item;
             }}
           />

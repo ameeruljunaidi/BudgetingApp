@@ -1,5 +1,5 @@
 import { LoadingOverlay } from "@mantine/core";
-import { ReactElement, useState } from "react";
+import { ReactElement } from "react";
 import Landing from "../components/landing";
 import type { NextPageWithLayout } from "./_app";
 

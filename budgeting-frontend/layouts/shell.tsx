@@ -1,29 +1,27 @@
 // Mantine
 import {
   AppShell,
-  Navbar,
-  Header,
-  Group,
-  Collapse,
-  Text,
-  MediaQuery,
-  Burger,
-  useMantineTheme,
-  Button,
-  createStyles,
   Box,
+  Burger,
+  Button,
   Center,
-  Loader,
-  NativeSelect,
-  Container,
+  Collapse,
+  createStyles,
   Flex,
+  Group,
+  Header,
+  Loader,
+  MediaQuery,
+  NativeSelect,
+  Navbar,
+  Text,
+  useMantineTheme,
 } from "@mantine/core";
 import { useViewportSize } from "@mantine/hooks";
 import { ModalsProvider, openContextModal } from "@mantine/modals";
 
 // React
-import { ReactElement, createContext } from "react";
-import { useState } from "react";
+import { createContext, ReactElement, useState } from "react";
 import { useRouter } from "next/router";
 
 // Components
@@ -37,7 +35,6 @@ import EditTransactionModal from "../components/account/edit-transaction-modal";
 import { useQuery } from "@apollo/client";
 import GET_ME from "../graphql/queries/get-me";
 import { User } from "../graphql/__generated__/graphql";
-import useCurrency from "../hooks/useCurrency";
 
 const useStyles = createStyles((theme, _params, getRef) => {
   return {
@@ -114,11 +111,11 @@ export default function Shell({ children }: { children: ReactElement }) {
     loading: userLoading,
     error: userError,
   } = useQuery(GET_ME, {
-    onCompleted: data => {
+    onCompleted: (data) => {
       if (!data.me) router.push("/unauthenticated");
       else console.log("User logged in", data.me);
     },
-    onError: error => {
+    onError: (error) => {
       console.error(error.graphQLErrors[0].message);
       router.push("/unauthenticated");
     },
@@ -141,7 +138,7 @@ export default function Shell({ children }: { children: ReactElement }) {
   }
 
   // Get list of accounts for collapsible buttons
-  const accounts = user.me.accounts.map(account => {
+  const accounts = user.me.accounts.map((account) => {
     const currentAccountInPath = router.asPath.split("/")[3];
 
     return (
@@ -150,10 +147,11 @@ export default function Shell({ children }: { children: ReactElement }) {
         className={cx(classes.collapsible, { [classes.linkActive]: account?._id === currentAccountInPath })}
         href={`/shell/account/${account?._id}`}
         key={account?._id}
-        onClick={event => {
+        onClick={(event) => {
           event.preventDefault();
           router.push(`/shell/account/${account?._id}`);
-        }}>
+        }}
+      >
         <Group spacing={0} position="apart">
           <Box>{account?.name}</Box>
           <Box>{account?.balance.toLocaleString("en-US", { style: "currency", currency: "USD" })}</Box>
@@ -180,13 +178,14 @@ export default function Shell({ children }: { children: ReactElement }) {
             [classes.linkActive]: nameLowerCase === currentPath && nameLowerCase === activeSelection,
           })}
           href={link}
-          onClick={event => {
+          onClick={(event) => {
             event.preventDefault();
             setActiveSelection(nameLowerCase);
-            setSidebarOpened(prev => !prev);
+            setSidebarOpened((prev) => !prev);
             collapsibleFn && collapsibleFn();
             if (!collapsibleFn) router.push(link);
-          }}>
+          }}
+        >
           <span>{name}</span>
         </a>
         <Collapse in={openCollapsible ?? false}>{collapsibleElem}</Collapse>
@@ -217,11 +216,11 @@ export default function Shell({ children }: { children: ReactElement }) {
         navbar={
           <Navbar p="md" hiddenBreakpoint="sm" hidden={!sidebarOpened} width={{ sm: 200, lg: 300 }}>
             <Navbar.Section grow>
-              {sidebarLinks.map(link => createButton({ link: link.link, name: link.name }))}
+              {sidebarLinks.map((link) => createButton({ link: link.link, name: link.name }))}
               {createButton({
                 link: "/shell/accounts",
                 name: "Accounts",
-                collapsibleFn: () => setShowAccount(o => !o),
+                collapsibleFn: () => setShowAccount((o) => !o),
                 collapsibleElem: accounts,
                 openCollapsible: showAccounts,
               })}
@@ -244,7 +243,7 @@ export default function Shell({ children }: { children: ReactElement }) {
               <MediaQuery largerThan="sm" styles={{ display: "none" }}>
                 <Burger
                   opened={sidebarOpened}
-                  onClick={() => setSidebarOpened(o => !o)}
+                  onClick={() => setSidebarOpened((o) => !o)}
                   size="sm"
                   color={theme.colors.gray[6]}
                   mr="xl"
@@ -260,13 +259,14 @@ export default function Shell({ children }: { children: ReactElement }) {
                   <NativeSelect
                     data={["CAD", "USD", "MYR", "EUR", "GBP"]}
                     value={selectedCurrency}
-                    onChange={event => setSelectedCurrency(event.currentTarget.value)}
+                    onChange={(event) => setSelectedCurrency(event.currentTarget.value)}
                   />
                 </Flex>
               </Group>
             </div>
           </Header>
-        }>
+        }
+      >
         {userLoading ? (
           <Center h={height} w={width}>
             <Loader />
@@ -286,7 +286,8 @@ export default function Shell({ children }: { children: ReactElement }) {
                     editTransaction: EditTransactionModal,
                     addAccount: AddAccountModal,
                   }}
-                  labels={{ confirm: "Submit", cancel: "Cancel" }}>
+                  labels={{ confirm: "Submit", cancel: "Cancel" }}
+                >
                   {children}
                 </ModalsProvider>
               </CurrencyContext.Provider>

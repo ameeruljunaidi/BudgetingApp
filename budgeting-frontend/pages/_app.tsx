@@ -15,7 +15,7 @@ export type AppPropsWithLayout = AppProps & {
 };
 
 export default function App({ Component, pageProps }: AppPropsWithLayout) {
-  const getLayout = Component.getLayout ?? (page => page);
+  const getLayout = Component.getLayout ?? ((page) => page);
 
   return (
     <ApolloProvider client={client}>
@@ -26,7 +26,8 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
           colorScheme: "light",
           fontFamily: "Helvetica",
           spacing: { xs: 15, sm: 20, md: 25, lg: 30, xl: 40 },
-        }}>
+        }}
+      >
         <NotificationsProvider>
           {/* Get the layout of the page */}
           {getLayout(<Component {...pageProps} />)}

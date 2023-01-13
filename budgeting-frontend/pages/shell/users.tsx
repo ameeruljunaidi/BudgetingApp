@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 import Shell from "../../layouts/shell";
 import { UsersRolesTable } from "../../components/users-table";
 import { GetUsersDocument, User } from "../../graphql/__generated__/graphql";
@@ -18,7 +18,7 @@ export async function getStaticProps() {
 }
 
 const Users: NextPageWithLayout<{ users: User[] }> = ({ users }) => {
-  const data = users.map(user => {
+  const data = users.map((user) => {
     return { avatar: "", name: user.name, email: user.email, role: user.role };
   });
 

@@ -1,4 +1,4 @@
-import { FormEvent, useContext } from "react";
+import { FormEvent } from "react";
 import { Button, LoadingOverlay, Select, Stack, TextInput } from "@mantine/core";
 import { FormErrors, useForm } from "@mantine/form";
 import { AddAccountInput } from "../../graphql/__generated__/graphql";
@@ -8,7 +8,6 @@ import ADD_ACCOUNT from "../../graphql/mutations/add-account";
 import GET_ME from "../../graphql/queries/get-me";
 import { showNotification } from "@mantine/notifications";
 import { ContextModalProps } from "@mantine/modals";
-import { CurrencyContext } from "../../layouts/shell";
 
 type AddAccountModalProps = {};
 
@@ -24,19 +23,19 @@ const AddAccountModal = ({ context, id, innerProps }: ContextModalProps<AddAccou
       balance: 0,
     },
     validate: {
-      name: value => (value.length < 3 ? "Account name must be longer than 3 characters" : null),
-      type: value => (!accountTypes.find(item => item === value) ? "Invalid type of account" : null),
-      balance: value => (isNaN(value) ? "Balance must be a number" : null),
+      name: (value) => (value.length < 3 ? "Account name must be longer than 3 characters" : null),
+      type: (value) => (!accountTypes.find((item) => item === value) ? "Invalid type of account" : null),
+      balance: (value) => (isNaN(value) ? "Balance must be a number" : null),
     },
   });
 
   const accountTypes = ["checking", "credit", "tracking"];
 
-  const selections = accountTypes.map(item => ({
+  const selections = accountTypes.map((item) => ({
     value: item,
     label: item
       .split(" ")
-      .map(word => word[0].toUpperCase() + word.substring(1))
+      .map((word) => word[0].toUpperCase() + word.substring(1))
       .join(""),
   }));
 
@@ -44,14 +43,14 @@ const AddAccountModal = ({ context, id, innerProps }: ContextModalProps<AddAccou
     // prettier-ignore
     const parsedBalance = !values.balance ? 0
             : isNaN(values.balance) ? 0
-            : typeof values.balance === "string" ? parseInt(values.balance)
-            : values.balance;
+                : typeof values.balance === "string" ? parseInt(values.balance)
+                    : values.balance;
 
     addAccountMutation({
       variables: {
         input: { name: values.name, type: values.type, balance: parsedBalance },
       },
-      onCompleted: data => {
+      onCompleted: (data) => {
         showNotification({
           title: "Successfully added account",
           message: `${data.addAccount.name} added!`,
@@ -60,7 +59,7 @@ const AddAccountModal = ({ context, id, innerProps }: ContextModalProps<AddAccou
         router.push(`/shell/account/${data.addAccount._id}`);
         form.reset();
       },
-      onError: error => console.error(error.graphQLErrors[0].message),
+      onError: (error) => console.error(error.graphQLErrors[0].message),
       refetchQueries: [{ query: GET_ME }],
     });
   };

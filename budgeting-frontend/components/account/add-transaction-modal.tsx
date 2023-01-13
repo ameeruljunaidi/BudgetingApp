@@ -1,33 +1,16 @@
 import { useMutation } from "@apollo/client";
-import {
-  Button,
-  Center,
-  createStyles,
-  Flex,
-  Group,
-  Loader,
-  LoadingOverlay,
-  Modal,
-  Select,
-  Stack,
-  TextInput,
-} from "@mantine/core";
+import { Button, createStyles, Group, LoadingOverlay, Select, Stack, TextInput } from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
 import { FormErrors, useForm } from "@mantine/form";
 import { useToggle } from "@mantine/hooks";
 import { ContextModalProps } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import { IconX } from "@tabler/icons";
-import { FormEvent, forwardRef, ReactElement, useContext, useImperativeHandle, useState } from "react";
+import { FormEvent, useContext, useState } from "react";
 import ADD_TRANSACTION from "../../graphql/mutations/add-transaction";
 import GET_ME from "../../graphql/queries/get-me";
 import GET_TRANSACTIONS_FROM_ACCOUNT from "../../graphql/queries/get-transactions-from-account";
-import {
-  Account,
-  AddTransactionDetailInput,
-  AddTransactionInput,
-  CategoryGroups,
-} from "../../graphql/__generated__/graphql";
+import { Account, AddTransactionDetailInput, AddTransactionInput } from "../../graphql/__generated__/graphql";
 import { UserContext } from "../../layouts/shell";
 
 export type AddTransactionModalProps = {
@@ -37,7 +20,7 @@ export type AddTransactionModalProps = {
 type AddTransactionModalInput = Pick<AddTransactionInput, "date"> &
   Pick<AddTransactionDetailInput, "amount" | "category" | "payee"> & { categoryGroup: string };
 
-const useStyles = createStyles(theme => ({
+const useStyles = createStyles((theme) => ({
   selected: {
     color: `${theme.white} !important`,
     backgroundColor: `${theme.black} !important`,
@@ -57,16 +40,16 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
 
   const { classes, cx } = useStyles();
 
-  const availableCategoryGroups = user.categoryGroups.map(group => ({
+  const availableCategoryGroups = user.categoryGroups.map((group) => ({
     value: group.categoryGroup,
     label: group.categoryGroup,
   }));
   const initialSelectedCategoryGroup = user.categoryGroups[0].categoryGroup;
-  const initialAvailableCategories = user.categoryGroups[0].categories.map(category => ({
+  const initialAvailableCategories = user.categoryGroups[0].categories.map((category) => ({
     value: category,
     label: category,
   }));
-  const initialAvailablePayees = user.payees.map(payee => ({ value: payee, label: payee }));
+  const initialAvailablePayees = user.payees.map((payee) => ({ value: payee, label: payee }));
 
   const [selectedCategoryGroup, setSelectedCategoryGroup] = useState<string>(initialSelectedCategoryGroup);
   const [availableCategories, setAvailableCategories] = useState<SelectType[]>(initialAvailableCategories);
@@ -85,7 +68,8 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
       payee: availablePayees[0].value,
     },
     validate: {
-      amount: value => (value === undefined ? "Must have an amount" : isNaN(value) ? "Amount must be a number" : null),
+      amount: (value) =>
+        value === undefined ? "Must have an amount" : isNaN(value) ? "Amount must be a number" : null,
       // categoryGroup: , // TODO: Validate
       // category: , // TODO: Validate
     },
@@ -106,9 +90,9 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
 
     // prettier-ignore
     const parsedAmount = !values.amount ? 0
-      : isNaN(values.amount) ? 0
-      : typeof values.amount === "string" ? parseFloat(values.amount)
-      : values.amount;
+            : isNaN(values.amount) ? 0
+                : typeof values.amount === "string" ? parseFloat(values.amount)
+                    : values.amount;
 
     const amountWithFlow =
       (flow === "inflow" && parsedAmount < 0) || (flow === "outflow" && parsedAmount > 0)
@@ -138,10 +122,10 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
         { query: GET_TRANSACTIONS_FROM_ACCOUNT, variables: { accountId: account._id } },
         { query: GET_ME },
       ],
-      onCompleted: _data => {
+      onCompleted: (_data) => {
         showNotification({ title: "Added transaction", message: "Successfully added transaction to account" });
       },
-      onError: error => {
+      onError: (error) => {
         showNotification({
           title: "Failed to add transaction.",
           message: `${error.graphQLErrors[0].message}`,
@@ -166,10 +150,10 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
   const handleCategoryGroupChange = (newCategoryGroup: string) => {
     setSelectedCategoryGroup(newCategoryGroup);
 
-    const newCategoryGroupFromUser = user.categoryGroups.find(group => group.categoryGroup === newCategoryGroup);
+    const newCategoryGroupFromUser = user.categoryGroups.find((group) => group.categoryGroup === newCategoryGroup);
     if (!newCategoryGroupFromUser) throw new Error("Failed to find category group");
 
-    const newAvailableCategories = newCategoryGroupFromUser.categories.map(category => ({
+    const newAvailableCategories = newCategoryGroupFromUser.categories.map((category) => ({
       value: category,
       label: category,
     }));
@@ -186,7 +170,7 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
           {/* Date */}
           <DatePicker
             value={form.values.date}
-            onChange={value => form.setFieldValue("date", value)}
+            onChange={(value) => form.setFieldValue("date", value)}
             placeholder="Pick a date"
             label="Transaction Date"
             firstDayOfWeek="sunday"
@@ -201,15 +185,15 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
           <Select
             label="Payee"
             placeholder="Choose A Payee"
-            data={availablePayees.filter(payee => payee.value !== "Reconciler")}
+            data={availablePayees.filter((payee) => payee.value !== "Reconciler")}
             {...form.getInputProps("payee")}
             nothingFound="Nothing found"
             searchable
             creatable
-            getCreateLabel={query => `+ Create ${query}`}
-            onCreate={query => {
+            getCreateLabel={(query) => `+ Create ${query}`}
+            onCreate={(query) => {
               const item = { value: query, label: query };
-              setPayees(current => [...current, item]);
+              setPayees((current) => [...current, item]);
               return item;
             }}
           />
@@ -218,7 +202,7 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
           <Select
             label="Category Group"
             placeholder="Choose A Category Group"
-            data={availableCategoryGroups.filter(group => group.value !== "Reconciler")}
+            data={availableCategoryGroups.filter((group) => group.value !== "Reconciler")}
             value={selectedCategoryGroup}
             onChange={handleCategoryGroupChange}
           />
@@ -227,7 +211,7 @@ export default function AddTransactionModal({ context, id, innerProps }: Context
           <Select
             label="Category"
             placeholder="Choose A Category"
-            data={availableCategories.filter(category => category.value !== "Reconciler")}
+            data={availableCategories.filter((category) => category.value !== "Reconciler")}
             {...form.getInputProps("category")}
           />
 
