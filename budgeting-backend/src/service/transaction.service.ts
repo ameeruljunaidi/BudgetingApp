@@ -143,7 +143,7 @@ const updateTransaction = async (transaction: UpdateTransactionInput, userId: st
         new: true,
     });
 
-    if (!returnedTransactions) throw new GraphQLError("Error updating user to the DB");
+    if (!returnedTransactions) throw new GraphQLError("Error updating transaction to the DB");
     const newTransaction = returnedTransactions.toObject();
 
     // Update the balance of the account on user

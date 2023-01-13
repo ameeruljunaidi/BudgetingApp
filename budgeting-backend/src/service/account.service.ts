@@ -1,15 +1,15 @@
 import AddAccountInput from "../schema/account/addAccount.input";
-import DeleteAccountInput from "../schema/account/deleteAccount.input";
 import QueryAccountInput from "../schema/account/queryAccount.input";
 import UpdateAccountInput from "../schema/account/updateAccount.input";
-import User, { UserModel } from "../schema/user.schema";
+import User from "../schema/user.schema";
 import path from "path";
 import myLogger from "../utils/logger";
 import UserService from "./user.service";
 import Account from "../schema/account.schema";
-import { GraphQLDeprecatedDirective, GraphQLError } from "graphql";
+import { GraphQLError } from "graphql";
 import TransactionService from "./transaction.service";
 import Transaction, { TransactionModel } from "../schema/transaction.schema";
+import Context from "../types/context";
 
 const logger = myLogger(path.basename(__filename));
 
@@ -51,9 +51,33 @@ const getAccounts = async (input: QueryAccountInput & { user: User["_id"] }): Pr
     return returnedUser.accounts;
 };
 
-const deleteAccount = async (input: DeleteAccountInput) => {};
+const deleteAccount = async (context: Context, accountId: string): Promise<Account> => {
+    const user = context.user;
+    if (!user) throw new GraphQLError("User must be logged in to delete an account.");
 
-const updateAccount = async (input: UpdateAccountInput) => {};
+    const account = user.accounts.find((account) => account._id.toString() === accountId);
+    if (!account) throw new GraphQLError("Cannot find account from user.");
+
+    const transactions = await Promise.all(
+        account.transactions.map((transaction) => TransactionModel.findByIdAndDelete(transaction.toString()))
+    );
+
+    logger.info(`${transactions.length} transactions deleted from deleting acccount.`);
+
+    const getUser = await UserService.getUserById(user._id);
+
+    const updatedUser: User = {
+        ...getUser,
+        accounts: user.accounts.filter((account) => account._id.toString() !== accountId),
+    };
+
+    await UserService.updateUser(updatedUser);
+
+    return account;
+};
+
+const updateAccount = async (input: UpdateAccountInput) => {
+};
 
 const convertClearedTransactions = async (accountId: Account["_id"], userId: User["_id"]): Promise<Transaction[]> => {
     const user = await UserService.getUserById(userId);
@@ -67,10 +91,7 @@ const convertClearedTransactions = async (accountId: Account["_id"], userId: Use
         TransactionModel.findByIdAndUpdate(transaction._id, transaction, { new: true })
     );
     const resolvedTransactionsDocs = await Promise.all(updateTransactionsPromises);
-    const resolvedTransactions = resolvedTransactionsDocs
-        .map((docs) => docs?.toObject() as Transaction)
-        .filter((transaction) => transaction);
-    return resolvedTransactions;
+    return resolvedTransactionsDocs.map((docs) => docs?.toObject() as Transaction).filter((transaction) => transaction);
 };
 
 const reconcileAccount = async (
@@ -80,10 +101,8 @@ const reconcileAccount = async (
 ): Promise<Account> => {
     const user = await UserService.getUserById(userId);
     const account = UserService.getAccountById(user, accountId);
-
     const difference = newBalance - account.balance;
     logger.info(difference, "The difference is");
-
     if (!difference) {
         const updatedAccount: Account = { ...account, lastReconciled: new Date() };
         const updatedUser: User = {
@@ -94,7 +113,6 @@ const reconcileAccount = async (
         await convertClearedTransactions(accountId, userId);
         return UserService.getAccountById(savedUser, accountId);
     }
-
     await TransactionService.addTransaction({
         account: account.name,
         approved: true,
@@ -103,30 +121,24 @@ const reconcileAccount = async (
         date: new Date(),
         reconciled: true,
         scheduled: false,
-        transactionDetails: [{ amount: difference, category: "Reconciler", payee: "Reconciler" }],
+        transactionDetails: [ { amount: difference, category: "Reconciler", payee: "Reconciler" } ],
         user: userId,
     });
-
     const newUser = await UserService.getUserById(userId);
     const newAccount = UserService.getAccountById(newUser, accountId);
-    if (newAccount.balance !== newBalance) {
+    if (newAccount.balance !== newBalance)
         throw new GraphQLError("Something bad happened when adding reconciler balance.");
-    }
-
     const updatedAccount: Account = {
         ...newAccount,
         reconciled: true,
         reconciledBalance: newBalance,
         lastReconciled: new Date(),
     };
-
     const updatedUser: User = {
         ...newUser,
         accounts: newUser.accounts.map((account) => (account._id.toString() !== accountId ? account : updatedAccount)),
     };
-
     await convertClearedTransactions(accountId, userId);
-
     const savedUser = await UserService.updateUser(updatedUser);
     return UserService.getAccountById(savedUser, accountId);
 };

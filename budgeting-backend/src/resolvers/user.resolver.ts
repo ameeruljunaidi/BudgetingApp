@@ -8,7 +8,6 @@ import Account from "../schema/account.schema";
 import AddAccountInput from "../schema/account/addAccount.input";
 import QueryAccountInput from "../schema/account/queryAccount.input";
 import UpdateAccountInput from "../schema/account/updateAccount.input";
-import DeleteAccountInput from "../schema/account/deleteAccount.input";
 import AccountService from "../service/account.service";
 import { GraphQLError } from "graphql";
 import CategoryGroups from "../schema/category.schema";
@@ -66,8 +65,8 @@ export default class UserResolver {
 
     @Authorized("admin", "user")
     @Mutation(() => Account)
-    deleteAccount(@Arg("input") input: DeleteAccountInput) {
-        return AccountService.deleteAccount(input);
+    deleteAccount(@Arg("accountId") accountId: string, @Ctx() context: Context) {
+        return AccountService.deleteAccount(context, accountId);
     }
 
     @Authorized("admin", "user")

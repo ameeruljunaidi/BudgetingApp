@@ -7,11 +7,9 @@ import config from "../utils/config";
 import CreateUserInput from "../schema/user/createUser.input";
 import LoginInput from "../schema/user/login.input";
 import path from "path";
-
-import myLogger from "../utils/logger";
-import getPagination from "./pagination.service";
 import Account from "../schema/account.schema";
 import CategoryGroups from "../schema/category.schema";
+import myLogger from "../utils/logger";
 
 const logger = myLogger(path.basename(__filename));
 
@@ -20,7 +18,7 @@ const getUserById = async (userId: string): Promise<User> => {
     const user = await UserModel.findById(userId).lean();
     if (!user) throw new GraphQLError("Cannot find user in DB");
 
-    logger.info(user, "User retrieved from DB");
+    logger.info("User retrieved from DB");
 
     return user as User;
 };
@@ -49,8 +47,6 @@ const login = async (input: LoginInput, context: Context): Promise<string> => {
         });
     }
 
-    logger.info({ user }, "User found");
-    logger.info({ input: input.password }, "Input password");
     const passwordIsValid = await bcrypt.compare(input.password, user.password);
 
     if (!passwordIsValid) {
@@ -62,9 +58,6 @@ const login = async (input: LoginInput, context: Context): Promise<string> => {
     }
 
     const token = jwt.sign(user, config.JWT_SECRET);
-
-    logger.info("Token set");
-    logger.info(context, "Context:");
 
     context.res.cookie("accessToken", token, {
         maxAge: 3.154e10, // 1 year
@@ -142,8 +135,6 @@ const addCategory = async (categoryGroup: string, category: string, userId: stri
     return updatedUser.categoryGroups;
 };
 
-const getUsersPaginated = getPagination<User>(UserModel);
-
 export default {
     getUserById,
     createUser,
@@ -151,7 +142,6 @@ export default {
     getUsers,
     deleteUser,
     updateUser,
-    getUsersPaginated,
     getAccountById,
     addCategoryGroup,
     addCategory,

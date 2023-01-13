@@ -1,7 +1,7 @@
 import { gql } from "../__generated__";
 
 const CONVERT_CURRENCY = gql(/* GraphQL */ `
-  query Query($input: ConvertCurrencyInput!) {
+  query convertCurrency($input: ConvertCurrencyInput!) {
     convertCurrency(input: $input) {
       amount
       date
