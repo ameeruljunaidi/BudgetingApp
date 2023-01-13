@@ -7,17 +7,11 @@ import { useMutation } from "@apollo/client";
 import ADD_ACCOUNT from "../../graphql/mutations/add-account";
 import GET_ME from "../../graphql/queries/get-me";
 import { showNotification } from "@mantine/notifications";
+import { ContextModalProps } from "@mantine/modals";
 
-export type AddAccountModalHandler = {
-  toggleOpen: () => void;
-};
+type AddAccountModalProps = {};
 
-type AddAccountModalProps = {
-  children: ReactElement;
-};
-
-const AddAccountModal = forwardRef<AddAccountModalHandler, AddAccountModalProps>(({ children }, refs) => {
-  const [opened, setOpened] = useState(false);
+const AddAccountModal = ({ context, id, innerProps }: ContextModalProps<AddAccountModalProps>) => {
   const [addAccountMutation, { data, loading, error }] = useMutation(ADD_ACCOUNT);
   const router = useRouter();
 
@@ -33,14 +27,6 @@ const AddAccountModal = forwardRef<AddAccountModalHandler, AddAccountModalProps>
       balance: value => (isNaN(value) ? "Balance must be a number" : null),
     },
   });
-
-  const toggleOpen = () => {
-    setOpened(prev => !prev);
-  };
-
-  useImperativeHandle(refs, () => ({
-    toggleOpen,
-  }));
 
   const accountTypes = ["checking", "credit", "tracking"];
 
@@ -68,7 +54,8 @@ const AddAccountModal = forwardRef<AddAccountModalHandler, AddAccountModalProps>
           title: "Successfully added account",
           message: `${data.addAccount.name} added!`,
         });
-        setOpened(prev => !prev);
+        context.closeModal(id);
+        router.push(`/shell/account/${data.addAccount._id}`);
         form.reset();
       },
       onError: error => console.error(error.graphQLErrors[0].message),
@@ -82,45 +69,36 @@ const AddAccountModal = forwardRef<AddAccountModalHandler, AddAccountModalProps>
 
   return (
     <>
-      {children}
-      <Modal opened={opened} onClose={() => setOpened(false)} title="Add an Account" centered>
-        {loading ? (
-          <Center>
-            <Loader />
-          </Center>
-        ) : (
-          <form onSubmit={form.onSubmit(addAccount, validateInfo)}>
-            <Stack>
-              {/* Name */}
-              <TextInput
-                type="text"
-                placeholder="Name of Your Account"
-                label="Account Name"
-                {...form.getInputProps("name")}
-              />
+      <form onSubmit={form.onSubmit(addAccount, validateInfo)}>
+        <Stack>
+          {/* Name */}
+          <TextInput
+            type="text"
+            placeholder="Name of Your Account"
+            label="Account Name"
+            {...form.getInputProps("name")}
+          />
 
-              {/* Type */}
-              <Select
-                label="Account Type"
-                placeholder="Choose Account Type"
-                data={selections}
-                {...form.getInputProps("type")}
-              />
+          {/* Type */}
+          <Select
+            label="Account Type"
+            placeholder="Choose Account Type"
+            data={selections}
+            {...form.getInputProps("type")}
+          />
 
-              {/* Balance */}
-              <TextInput type="number" label="Account Balance" {...form.getInputProps("balance")} />
+          {/* Balance */}
+          <TextInput type="number" label="Account Balance" {...form.getInputProps("balance")} />
 
-              {/* Submit Button */}
-              <Button bg="black" type="submit">
-                Submit
-              </Button>
-            </Stack>
-          </form>
-        )}
-      </Modal>
+          {/* Submit Button */}
+          <Button bg="black" type="submit">
+            Submit
+          </Button>
+        </Stack>
+      </form>
     </>
   );
-});
+};
 
 AddAccountModal.displayName = "AddAccountModal";
 

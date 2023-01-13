@@ -1,18 +1,16 @@
 import { useMutation } from "@apollo/client";
 import { ActionIcon, Group } from "@mantine/core";
-import { openConfirmModal } from "@mantine/modals";
+import { openConfirmModal, openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import { IconCheckbox, IconEdit, IconTrash, IconX } from "@tabler/icons";
-import { useRef, useState } from "react";
 import DELETE_TRANSACTION from "../../graphql/mutations/delete-transaction";
 import UPDATE_TRANSACTION from "../../graphql/mutations/update-transaction";
 import GET_ME from "../../graphql/queries/get-me";
 import GET_TRANSACTIONS_FROM_ACCOUNT from "../../graphql/queries/get-transactions-from-account";
 import { Transaction, TransactionDetail, UpdateTransactionInput } from "../../graphql/__generated__/graphql";
-import EditTransactionModal, { EditTransactionModalHandler } from "./edit-transaction-modal";
+import EditTransactionModal from "./edit-transaction-modal";
 
 export default function TransactionRow({ transaction }: { transaction: Transaction }) {
-  const transactionTableRef = useRef<EditTransactionModalHandler>(null);
   const date = new Date(Date.parse(transaction.date)).toLocaleDateString("en-GB");
   const [deleteTransactionMutation, { loading: loadingDelete }] = useMutation(DELETE_TRANSACTION);
   const [updateTransactionMutation, { loading: loadingUpdate, client: updateClient }] = useMutation(UPDATE_TRANSACTION);
@@ -79,6 +77,14 @@ export default function TransactionRow({ transaction }: { transaction: Transacti
       },
     });
 
+  const handleEditTransaction = (transaction: Transaction) => {
+    openContextModal({
+      modal: "editTransaction",
+      title: "Edit Transaction",
+      innerProps: { transaction },
+    });
+  };
+
   const payeeColumn = aggregateTransactionDetail.payee;
   const categoryColumn =
     aggregateTransactionDetail.category === "Reconciler" ? "" : aggregateTransactionDetail.category;
@@ -91,14 +97,12 @@ export default function TransactionRow({ transaction }: { transaction: Transacti
       <td>{aggregateTransactionDetail.amount.toLocaleString("en-US", { style: "currency", currency: "USD" })}</td>
       <td>
         <Group spacing={4}>
-          <EditTransactionModal ref={transactionTableRef} transaction={transaction}>
-            <ActionIcon
-              disabled={transaction.transactionDetails[0].category === "Reconciler"}
-              onClick={() => transactionTableRef.current?.toggleOpen()}
-              variant="default">
-              <IconEdit size={18} />
-            </ActionIcon>
-          </EditTransactionModal>
+          <ActionIcon
+            disabled={transaction.transactionDetails[0].category === "Reconciler"}
+            onClick={() => handleEditTransaction(transaction)}
+            variant="default">
+            <IconEdit size={18} />
+          </ActionIcon>
           <ActionIcon
             disabled={transaction.transactionDetails[0].category === "Reconciler" || transaction.reconciled}
             onClick={() => handleClearTransaction(transaction, transaction.account)}

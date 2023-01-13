@@ -23,13 +23,17 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 
 // Components
-import AddAccountModal, { AddAccountModalHandler } from "../components/account/add-account-modal";
+import AddAccountModal from "../components/account/add-account-modal";
 import ClientOnly from "../components/client-only";
 
 // Graphql
 import { useQuery } from "@apollo/client";
 import { User } from "../graphql/__generated__/graphql";
 import GET_ME from "../graphql/queries/get-me";
+import { ModalsProvider, openContextModal } from "@mantine/modals";
+import ReconcileAccountModal from "../components/account/reconcile-account-modal";
+import AddTransactionModal from "../components/account/add-transaction-modal";
+import EditTransactionModal from "../components/account/edit-transaction-modal";
 
 const useStyles = createStyles((theme, _params, getRef) => {
   return {
@@ -103,8 +107,6 @@ export default function Shell({ children }: { children: ReactElement }) {
   const runUserQuery = useQuery(GET_ME, { onCompleted: data => console.info("User set in context", data.me) });
   const { data: user, loading: userLoading, error: userError } = runUserQuery;
 
-  const shellRef = useRef<AddAccountModalHandler>(null);
-
   if (userLoading) {
     return (
       <Center>
@@ -177,6 +179,14 @@ export default function Shell({ children }: { children: ReactElement }) {
 
   const sidebarLinks = user?.me?.role === "admin" ? links.concat({ link: "/shell/users", name: "Users" }) : links;
 
+  const handleAddAccount = () => {
+    openContextModal({
+      modal: "addAccount",
+      title: "Add Account",
+      innerProps: {},
+    });
+  };
+
   return (
     <ClientOnly>
       <AppShell
@@ -200,13 +210,11 @@ export default function Shell({ children }: { children: ReactElement }) {
               })}
             </Navbar.Section>
             <Navbar.Section>
-              <AddAccountModal ref={shellRef}>
-                <Center>
-                  <Button bg="black" onClick={() => shellRef?.current?.toggleOpen()}>
-                    Add Account
-                  </Button>
-                </Center>
-              </AddAccountModal>
+              <Center>
+                <Button bg="black" onClick={() => handleAddAccount()}>
+                  Add Account
+                </Button>
+              </Center>
             </Navbar.Section>
             <Navbar.Section>
               <Center>{createButton({ link: "/login", name: "Back to Login" })}</Center>
@@ -243,7 +251,18 @@ export default function Shell({ children }: { children: ReactElement }) {
           </Center>
         ) : (
           <main>
-            <UserContext.Provider value={user.me}>{children}</UserContext.Provider>
+            <UserContext.Provider value={user.me}>
+              <ModalsProvider
+                modals={{
+                  reconcileAccount: ReconcileAccountModal,
+                  addTransaction: AddTransactionModal,
+                  editTransaction: EditTransactionModal,
+                  addAccount: AddAccountModal,
+                }}
+                labels={{ confirm: "Submit", cancel: "Cancel" }}>
+                {children}
+              </ModalsProvider>
+            </UserContext.Provider>
           </main>
         )}
       </AppShell>

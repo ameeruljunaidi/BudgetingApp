@@ -1,21 +1,24 @@
 import { Group, Paper, Button, TextInput, Flex, Text } from "@mantine/core";
-import { useRef } from "react";
-import AddTransactionModal, { AddTransactionModalHandler } from "./add-transaction-modal";
+import { openContextModal } from "@mantine/modals";
 
 type TransactionsHeaderProps = {
   accountId: string;
 };
 export default function TransactionsHeader({ accountId }: TransactionsHeaderProps) {
-  const transactionHeaderRef = useRef<AddTransactionModalHandler>(null);
+  const handleAddTransaction = (accountId: string) => {
+    openContextModal({
+      modal: "addTransaction",
+      title: "Add Transaction",
+      innerProps: { accountId },
+    });
+  };
 
   return (
     <Paper bg="white" px="xs" py={8} withBorder>
       <Group position="apart">
-        <AddTransactionModal ref={transactionHeaderRef} accountId={accountId}>
-          <Button onClick={() => transactionHeaderRef.current?.toggleOpen()} bg="black">
-            Add Transaction
-          </Button>
-        </AddTransactionModal>
+        <Button onClick={() => handleAddTransaction(accountId)} bg="black">
+          Add Transaction
+        </Button>
         <div>
           <Flex direction="row" justify="flex-end" align="center">
             <Text mr="xs">Filter:</Text>

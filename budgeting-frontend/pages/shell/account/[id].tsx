@@ -59,9 +59,7 @@ const AccountPage: NextPageWithLayout = () => {
     openContextModal({
       modal: "reconcileAccount",
       title: "Reconcile Account",
-      innerProps: {
-        accountId: accountId,
-      },
+      innerProps: { accountId },
     });
   };
 
