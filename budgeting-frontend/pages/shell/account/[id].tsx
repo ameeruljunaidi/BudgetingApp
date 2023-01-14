@@ -6,9 +6,9 @@ import { ReactElement, useContext } from "react";
 import Shell, { UserContext } from "../../../layouts/shell";
 import GET_TRANSACTIONS_FROM_ACCOUNT from "../../../graphql/queries/get-transactions-from-account";
 import type { NextPageWithLayout } from "../../_app";
-import TransactionsTable from "../../../components/account/transactions-table";
+import TransactionsTable from "../../../components/transaction/transactions-table";
 import { Transaction } from "../../../graphql/__generated__/graphql";
-import TransactionsHeader from "../../../components/account/transaction-header";
+import TransactionsHeader from "../../../components/transaction/transaction-header";
 import { openContextModal } from "@mantine/modals";
 
 const AccountPage: NextPageWithLayout = () => {
