@@ -5,6 +5,7 @@ import { ReactElement, ReactNode } from "react";
 import { NextPage } from "next";
 import { MantineProvider } from "@mantine/core";
 import { NotificationsProvider } from "@mantine/notifications";
+import mantineTheme from "../styles/mantine-theme.style";
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -19,15 +20,7 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
 
   return (
     <ApolloProvider client={client}>
-      <MantineProvider
-        withGlobalStyles
-        withNormalizeCSS
-        theme={{
-          colorScheme: "light",
-          fontFamily: "Helvetica",
-          spacing: { xs: 15, sm: 20, md: 25, lg: 30, xl: 40 },
-        }}
-      >
+      <MantineProvider withGlobalStyles withNormalizeCSS theme={mantineTheme}>
         <NotificationsProvider>
           {/* Get the layout of the page */}
           {getLayout(<Component {...pageProps} />)}

@@ -52,3 +52,18 @@ export default class User {
 }
 
 export const UserModel = getModelForClass<typeof User>(User);
+
+@ObjectType()
+export class UserToken {
+    @Field(() => String, { description: descriptions.USER_ID })
+    _id: string;
+
+    @Field(() => String, { description: descriptions.USER_NAME })
+    name: string;
+
+    @Field(() => String, { description: descriptions.USER_EMAIL })
+    email: string;
+
+    @Field(() => String, { description: descriptions.USER_ROLE })
+    role: string;
+}

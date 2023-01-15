@@ -4,6 +4,8 @@ import { CurrencyContext } from "../layouts/shell";
 import { useQuery } from "@apollo/client";
 import CONVERT_CURRENCY from "../graphql/mutations/convert-currency";
 
+type Flow = "inflow" | "outflow";
+
 export default function useCurrency(
   amount: number,
   rawDate: Date,
@@ -25,14 +27,12 @@ export default function useCurrency(
 
   const formatCurrency = useCallback(
     (amount: number): string => {
-      const flow = amount < 0 ? "outflow" : "inflow";
+      const flow: Flow = amount < 0 ? "outflow" : "inflow";
 
-      const amountText = `${flow === "outflow" ? "(" : ""}${Math.abs(amount).toLocaleString("en-US", {
+      return `${flow === "outflow" ? "(" : ""}${Math.abs(amount).toLocaleString("en-US", {
         style: "currency",
         currency: `${globalCurrency}`,
       })}${flow === "outflow" ? ")" : ""}`;
-
-      return amountText;
     },
     [globalCurrency]
   );

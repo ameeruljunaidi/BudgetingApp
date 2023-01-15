@@ -4,19 +4,19 @@ const GET_ME = gql(/* GraphQL */ `
   query Me {
     me {
       _id
-      email
       name
+      email
       role
       accounts {
         _id
         active
-        currency
-        reconciled
-        name
-        transactions
         balance
+        currency
         lastReconciled
+        name
+        reconciled
         reconciledBalance
+        transactions
         type
       }
       categoryGroups {

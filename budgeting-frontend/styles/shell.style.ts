@@ -1,6 +1,6 @@
 import { createStyles } from "@mantine/core";
 
-const shellStyle = createStyles((theme, _params, getRef) => {
+const shellStyle = createStyles((theme, _params) => {
   return {
     link: {
       ...theme.fn.focusStyles(),
@@ -12,6 +12,7 @@ const shellStyle = createStyles((theme, _params, getRef) => {
       padding: `${theme.spacing.xs}px ${theme.spacing.xs}px`,
       borderRadius: theme.radius.sm,
       fontWeight: 500,
+      justifyContent: "space-between",
 
       "&:hover": {
         backgroundColor: theme.colorScheme === "dark" ? theme.colors.dark[6] : theme.colors.gray[0],

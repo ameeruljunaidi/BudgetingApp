@@ -4483,6 +4483,11 @@ react-property@2.0.0:
   resolved "https://registry.yarnpkg.com/react-property/-/react-property-2.0.0.tgz#2156ba9d85fa4741faf1918b38efc1eae3c6a136"
   integrity sha512-kzmNjIgU32mO4mmH5+iUyrqlpFQhF8K2k7eZ4fdLSOPFrD1XgEuSBv9LDEgxRXTMBqMd8ppT0x6TIzqE5pdGdw==
 
+react-table-column-resizer@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/react-table-column-resizer/-/react-table-column-resizer-1.0.1.tgz#0c0b46d7aa53ed37811f729aafdbd6707568a106"
+  integrity sha512-JOB3BMd37tr7W9x9YaB2coqpRo3IYpP7WGoekO+1h8LKVMfPmbxPhxazpjX8zzvlTaONtPA+EioEWFE8ZJ0ypg==
+
 react-textarea-autosize@8.3.4:
   version "8.3.4"
   resolved "https://registry.yarnpkg.com/react-textarea-autosize/-/react-textarea-autosize-8.3.4.tgz#270a343de7ad350534141b02c9cb78903e553524"

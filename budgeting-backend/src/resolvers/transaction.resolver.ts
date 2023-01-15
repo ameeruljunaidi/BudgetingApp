@@ -1,6 +1,5 @@
 import { GraphQLError } from "graphql";
 import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from "type-graphql";
-import UpdateAccountInput from "../schema/account/updateAccount.input";
 import Transaction from "../schema/transaction.schema";
 import AddTransactionInput from "../schema/transaction/addTransaction.input";
 import QueryTransactionsInput from "../schema/transaction/queryTransactions.input";
@@ -14,6 +13,7 @@ export default class TransactionResolver {
     @Query(() => [Transaction])
     getTransactions(@Arg("input") input: QueryTransactionsInput, @Ctx() context: Context) {
         const user = context.user;
+
         return TransactionService.getTransactions({ ...input, user: user?._id as string });
     }
 

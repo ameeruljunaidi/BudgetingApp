@@ -1,5 +1,5 @@
 import { useMutation } from "@apollo/client";
-import { ActionIcon, Group, Text } from "@mantine/core";
+import { ActionIcon, Group, Text, Tooltip } from "@mantine/core";
 import { openConfirmModal, openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import { IconCheckbox, IconEdit, IconTrash, IconX } from "@tabler/icons";
@@ -11,7 +11,7 @@ import GET_TRANSACTIONS_FROM_ACCOUNT from "../../graphql/queries/get-transaction
 import { Transaction, TransactionDetail, UpdateTransactionInput } from "../../graphql/__generated__/graphql";
 import useCurrency from "../../hooks/useCurrency";
 
-function TransactionRow({ transaction, accountCurrency }: { transaction: Transaction; accountCurrency: string }) {
+function Row({ transaction, accountCurrency }: { transaction: Transaction; accountCurrency: string }) {
   const date = new Date(Date.parse(transaction.date)).toLocaleDateString("en-GB");
   const [deleteTransactionMutation, { loading: loadingDelete }] = useMutation(DELETE_TRANSACTION);
   const [updateTransactionMutation, { loading: loadingUpdate, client: updateClient }] = useMutation(UPDATE_TRANSACTION);
@@ -40,7 +40,7 @@ function TransactionRow({ transaction, accountCurrency }: { transaction: Transac
       }),
     };
 
-    updateTransactionMutation({
+    void updateTransactionMutation({
       variables: { transaction },
       onError: (error) => {
         showNotification({
@@ -61,7 +61,7 @@ function TransactionRow({ transaction, accountCurrency }: { transaction: Transac
       confirmProps: { color: "dark" },
       onCancel: () => console.log(`Cancelled deleting ${transactionId}`),
       onConfirm: () => {
-        deleteTransactionMutation({
+        void deleteTransactionMutation({
           variables: { transactionId, accountId },
           onCompleted: (_data) => {
             showNotification({
@@ -97,48 +97,51 @@ function TransactionRow({ transaction, accountCurrency }: { transaction: Transac
   const categoryColumn =
     aggregateTransactionDetail.category === "Reconciler" ? "" : aggregateTransactionDetail.category;
 
-  // const flow = amount < 0 ? "outflow" : "inflow";
-  // const amountText = `${flow === "outflow" ? "(" : ""}${Math.abs(amount).toLocaleString("en-US", {
-  //   style: "currency",
-  //   currency: "USD",
-  // })}${flow === "outflow" ? ")" : ""}`;
-
   return (
     <tr key={transaction._id}>
       <td>{date}</td>
       <td>{payeeColumn}</td>
       <td>{categoryColumn}</td>
+
       <td>
         <Text color={printedAmount === "Loading..." ? "black" : flow === "outflow" ? "red" : "black"}>
           {printedAmount}
         </Text>
       </td>
       <td>
-        <Group spacing={4}>
-          <ActionIcon
-            disabled={transaction.transactionDetails[0].category === "Reconciler"}
-            onClick={() => handleEditTransaction(transaction)}
-            variant="default"
-          >
-            <IconEdit size={18} />
-          </ActionIcon>
-          <ActionIcon
-            disabled={transaction.transactionDetails[0].category === "Reconciler" || transaction.reconciled}
-            onClick={() => handleClearTransaction(transaction, transaction.account)}
-            variant={transaction.reconciled ? "light" : transaction.cleared ? "filled" : "default"}
-          >
-            <IconCheckbox size={18} />
-          </ActionIcon>
-          <ActionIcon
-            onClick={() => openDeleteTransactionModal(transaction._id, transaction.account)}
-            variant="default"
-          >
-            <IconTrash size={18} />
-          </ActionIcon>
+        <Group spacing="xs" position="right">
+          <Tooltip label="Edit Transaction">
+            <ActionIcon
+              disabled={transaction.transactionDetails[0].category === "Reconciler"}
+              onClick={() => handleEditTransaction(transaction)}
+              variant="default"
+            >
+              <IconEdit size={18} />
+            </ActionIcon>
+          </Tooltip>
+
+          <Tooltip label={transaction.cleared ? "Unclear Transaction" : "Clear Transaction"}>
+            <ActionIcon
+              disabled={transaction.transactionDetails[0].category === "Reconciler" || transaction.reconciled}
+              onClick={() => handleClearTransaction(transaction, transaction.account)}
+              variant={transaction.reconciled ? "light" : transaction.cleared ? "filled" : "default"}
+            >
+              <IconCheckbox size={18} />
+            </ActionIcon>
+          </Tooltip>
+
+          <Tooltip label="Delete Transaction">
+            <ActionIcon
+              onClick={() => openDeleteTransactionModal(transaction._id, transaction.account)}
+              variant="default"
+            >
+              <IconTrash size={18} />
+            </ActionIcon>
+          </Tooltip>
         </Group>
       </td>
     </tr>
   );
 }
 
-export default memo(TransactionRow);
+export default memo(Row);

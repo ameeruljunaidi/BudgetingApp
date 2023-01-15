@@ -9,6 +9,7 @@ import { useMutation } from "@apollo/client";
 import LOGIN from "../graphql/mutations/login";
 import { showNotification } from "@mantine/notifications";
 import { IconX } from "@tabler/icons";
+import GET_ME from "../graphql/queries/get-me";
 
 export default function Login() {
   const { height, width } = useViewportSize();
@@ -57,6 +58,7 @@ export default function Login() {
         }
         form.reset();
       },
+      refetchQueries: [{ query: GET_ME }],
     });
   };
 

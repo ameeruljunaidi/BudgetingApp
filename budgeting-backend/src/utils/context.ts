@@ -9,8 +9,8 @@ const logger = myLogger(path.basename(__filename));
 
 const context = async (ctx: Context) => {
     let context = ctx;
-    const auth = context.req ? context.req.headers.authorization : null;
 
+    const auth = context.req ? context.req.headers.authorization : null;
     if (auth && auth.toLowerCase().startsWith("bearer ") && process.env.NODE_ENV === "development") {
         const decodedToken = jwt.verify(auth.substring(7), config.JWT_SECRET) as JwtPayload;
 

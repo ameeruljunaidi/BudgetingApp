@@ -8,13 +8,12 @@ import ADD_ACCOUNT from "../../graphql/mutations/add-account";
 import GET_ME from "../../graphql/queries/get-me";
 import { showNotification } from "@mantine/notifications";
 import { ContextModalProps } from "@mantine/modals";
+import { IconX } from "@tabler/icons";
 
 type AddAccountModalProps = {};
 
-const AddAccountModal = ({ context, id, innerProps }: ContextModalProps<AddAccountModalProps>) => {
-  console.log("Add account modal");
-  const [addAccountMutation, { data, loading, error }] = useMutation(ADD_ACCOUNT);
-  const router = useRouter();
+const AddAccountModal = ({ context, id }: ContextModalProps<AddAccountModalProps>) => {
+  const [addAccountMutation, { loading }] = useMutation(ADD_ACCOUNT);
 
   const form = useForm({
     initialValues: {
@@ -40,13 +39,14 @@ const AddAccountModal = ({ context, id, innerProps }: ContextModalProps<AddAccou
   }));
 
   const addAccount = (values: AddAccountInput, _event: FormEvent<HTMLFormElement>) => {
-    // prettier-ignore
-    const parsedBalance = !values.balance ? 0
-            : isNaN(values.balance) ? 0
-                : typeof values.balance === "string" ? parseInt(values.balance)
-                    : values.balance;
+    const parsedBalance =
+      !values.balance || isNaN(values.balance)
+        ? 0
+        : typeof values.balance === "string"
+        ? parseFloat(values.balance)
+        : values.balance;
 
-    addAccountMutation({
+    void addAccountMutation({
       variables: {
         input: { name: values.name, type: values.type, balance: parsedBalance },
       },
@@ -56,10 +56,18 @@ const AddAccountModal = ({ context, id, innerProps }: ContextModalProps<AddAccou
           message: `${data.addAccount.name} added!`,
         });
         context.closeModal(id);
-        router.push(`/shell/account/${data.addAccount._id}`);
+        // void router.push(`/shell/account/${data.addAccount._id}`);
         form.reset();
       },
-      onError: (error) => console.error(error.graphQLErrors[0].message),
+      onError: (error) => {
+        showNotification({
+          title: "Failed to add transaction.",
+          message: `${error.graphQLErrors[0].message}`,
+          color: "red",
+          icon: <IconX />,
+        });
+        form.reset();
+      },
       refetchQueries: [{ query: GET_ME }],
     });
   };
@@ -101,7 +109,5 @@ const AddAccountModal = ({ context, id, innerProps }: ContextModalProps<AddAccou
     </>
   );
 };
-
-AddAccountModal.displayName = "AddAccountModal";
 
 export default AddAccountModal;

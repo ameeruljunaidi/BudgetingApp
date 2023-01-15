@@ -1,5 +1,5 @@
 import { GraphQLError } from "graphql";
-import User, { UserModel } from "../schema/user.schema";
+import User, { UserModel, UserToken } from "../schema/user.schema";
 import Context from "../types/context";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -39,28 +39,20 @@ const createUser = async (input: CreateUserInput): Promise<User> => {
 const login = async (input: LoginInput, context: Context): Promise<string> => {
     const user: User = await UserModel.findOne({ email: input.email }).lean();
 
-    if (!user) {
-        const userNotFound = "Please sign up.";
+    const wrongCredentials = "Wrong email or password. Please try again.";
 
-        throw new GraphQLError(userNotFound, {
-            extensions: { code: "BAD_USER_INPUT" },
-        });
-    }
+    if (!user) throw new GraphQLError(wrongCredentials, { extensions: { code: "BAD_USER_INPUT" } });
 
     const passwordIsValid = await bcrypt.compare(input.password, user.password);
 
-    if (!passwordIsValid) {
-        const wrongCredentials = "Wrong email or password. Please try again.";
+    if (!passwordIsValid) throw new GraphQLError(wrongCredentials, { extensions: { code: "BAD_USER_INPUT" } });
 
-        throw new GraphQLError(wrongCredentials, {
-            extensions: { code: "BAD_USER_INPUT" },
-        });
-    }
+    const userToken: UserToken = { _id: user._id, name: user.name, email: user.email, role: user.role };
 
-    const token = jwt.sign(user, config.JWT_SECRET);
+    const token = jwt.sign(userToken, config.JWT_SECRET);
 
     context.res.cookie("accessToken", token, {
-        maxAge: 3.154e10, // 1 year
+        maxAge: 3.154e10,
         httpOnly: true,
         domain: "localhost",
         path: "/",

@@ -1,15 +1,19 @@
 import { Account } from "../../graphql/__generated__/graphql";
-import { Box, Group, Text } from "@mantine/core";
+import { ActionIcon, Box, Container, Group, Text } from "@mantine/core";
 import { useRouter } from "next/router";
 import sidebarStyles from "../../styles/account-sidebar.style";
+import { memo, ReactElement } from "react";
+import { IconEdit } from "@tabler/icons";
+import useCurrency from "../../hooks/useCurrency";
 
 type AccountSidebarProps = {
   account: Account;
 };
 
-export default function AccountSidebar({ account }: AccountSidebarProps) {
+const AccountSidebar = ({ account }: AccountSidebarProps) => {
   const router = useRouter();
   const { cx, classes } = sidebarStyles();
+  const { printedAmount } = useCurrency(account.balance, new Date(), account.currency);
 
   const currentAccountInPath = router.asPath.split("/")[3];
 
@@ -21,13 +25,13 @@ export default function AccountSidebar({ account }: AccountSidebarProps) {
       key={account?._id}
       onClick={(event) => {
         event.preventDefault();
-        router.push(`/shell/account/${account?._id}`);
+        void router.push(`/shell/account/${account?._id}`);
       }}
     >
-      <Group spacing={0} position="apart">
-        <Box>{account?.name}</Box>
-        <Box>{account?.balance.toLocaleString("en-US", { style: "currency", currency: "USD" })}</Box>
-      </Group>
+      <Box sx={() => ({ overflow: "hidden", maxWidth: 180 })}>{account?.name}</Box>
+      <Box>{printedAmount}</Box>
     </Text>
   );
-}
+};
+
+export default memo(AccountSidebar);

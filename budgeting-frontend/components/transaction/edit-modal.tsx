@@ -31,11 +31,7 @@ type SelectType = {
   label: string;
 };
 
-export default function EditTransactionModal({
-  context,
-  id,
-  innerProps,
-}: ContextModalProps<EditTransactionModalProps>) {
+export default function EditModal({ context, id, innerProps }: ContextModalProps<EditTransactionModalProps>) {
   const user = useContext(UserContext);
   if (!user) throw new Error("User must be logged in");
 

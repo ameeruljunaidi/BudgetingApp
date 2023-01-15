@@ -1,29 +1,24 @@
-import { Table } from "@mantine/core";
+import { Center, Loader, Table, Text } from "@mantine/core";
 import { Transaction } from "../../graphql/__generated__/graphql";
-import TransactionRow from "./transaction-row";
+import TransactionRow from "./row";
 
 type TransactionTableProps = {
+  loading: boolean;
   transactions: Transaction[];
   accountCurrency: string;
 };
 
-// const useStyles = createStyles(theme => {
-//     return {
-//         tableHead: {
-//             backgroundColor: theme.black,
-//             color: theme.white,
-//         },
-//         tableRow: {
-//             backgroundColor: theme.white,
-//         },
-//     };
-// });
-
-export default function TransactionTable({ transactions, accountCurrency }: TransactionTableProps) {
-  // const { classes } = useStyles();
+export default function TransactionTable({ loading, transactions, accountCurrency }: TransactionTableProps) {
+  if (!loading && transactions.length === 0) {
+    return (
+      <Center p={24}>
+        <Text>No Transactions</Text>
+      </Center>
+    );
+  }
 
   return (
-    <Table striped highlightOnHover bg="white" withBorder>
+    <Table striped highlightOnHover bg="white" withBorder horizontalSpacing="md">
       <thead>
         <tr>
           <th>Date</th>

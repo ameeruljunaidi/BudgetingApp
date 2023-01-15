@@ -57,7 +57,7 @@ const logger = myLogger(path.basename(__filename));
 
         // prettier-ignore
         // @ts-ignore: server type unresolved issues, might be Apollo 4.0 issue, not sure
-        app.use("/graphql" , cors<cors.CorsRequest>(corsOptions), bodyParser.json(), expressMiddleware(server, { context }) );
+        app.use("/graphql", cors<cors.CorsRequest>(corsOptions), bodyParser.json(), expressMiddleware(server, { context }));
 
         httpServer.listen(config.PORT, () => {
             logger.info(`Server is now running on http://localhost:${config.PORT}/graphql`);

@@ -1,117 +1,47 @@
 import { useQuery } from "@apollo/client";
-import { Button, Center, Container, Flex, Group, Loader, Paper, Space, Text } from "@mantine/core";
-import { useViewportSize } from "@mantine/hooks";
+import { Center, Loader, Space } from "@mantine/core";
 import { useRouter } from "next/router";
 import { ReactElement, useContext } from "react";
 import Shell, { UserContext } from "../../../layouts/shell";
 import GET_TRANSACTIONS_FROM_ACCOUNT from "../../../graphql/queries/get-transactions-from-account";
 import type { NextPageWithLayout } from "../../_app";
-import TransactionsTable from "../../../components/transaction/transactions-table";
+import TransactionsTable from "../../../components/transaction/table";
 import { Transaction } from "../../../graphql/__generated__/graphql";
-import TransactionsHeader from "../../../components/transaction/transaction-header";
-import { openContextModal } from "@mantine/modals";
+import TransactionsHeader from "../../../components/transaction/header";
+import AccountDetail from "../../../components/account/account-detail";
 
 const AccountPage: NextPageWithLayout = () => {
   const router = useRouter();
   const accountId = router.query.id as string;
-  const { height, width } = useViewportSize();
   const user = useContext(UserContext);
 
-  const {
-    data: transactionsData,
-    loading: transactionsLoading,
-    error: transactionsError,
-  } = useQuery(GET_TRANSACTIONS_FROM_ACCOUNT, {
+  const { data: transactionsData, loading: transactionsLoading } = useQuery(GET_TRANSACTIONS_FROM_ACCOUNT, {
     variables: { accountId },
     skip: !accountId,
+    onError: (error) => {
+      console.error(error.graphQLErrors[0].message);
+      void router.push("/unauthenticated");
+    },
   });
 
-  if (!user) {
-    return (
-      <Center h={height} w={width}>
-        <Text>User not found</Text>
-      </Center>
-    );
-  }
-
+  if (!user) return null;
   const account = user.accounts.find((account) => account?._id === accountId);
-  if (!account) throw new Error("Cannot find account from user");
-
-  if (!transactionsData) {
-    return (
-      <Center h={height} w={width}>
-        <Loader />
-      </Center>
-    );
-  }
-
-  if (transactionsError) {
-    return (
-      <Center h={height} w={width}>
-        <Text>Account not found. {transactionsError.graphQLErrors[0].message}</Text>
-      </Center>
-    );
-  }
-
+  if (!account) return null;
   const transactions: Transaction[] = transactionsData?.getTransactionsFromAccount ?? [];
 
-  const reconcileAccount = (accountId: string) => {
-    openContextModal({
-      modal: "reconcileAccount",
-      title: "Reconcile Account",
-      innerProps: { accountId, transactions },
-    });
-  };
-
-  const clearedBalance = transactions
-    .filter((transaction) => transaction.cleared)
-    .reduce((total, transaction) => total + transaction.transactionDetails[0].amount, 0);
-
   return (
-    <Container>
-      <Paper bg="white" p="xs" withBorder>
-        <Group position="apart" grow>
-          <Container>
-            <Text size="lg" weight={700}>
-              {account?.name}
-            </Text>
-            <Text size="sm">Currency: {account?.currency}</Text>
-            <Text size="sm">
-              Balance: {account?.balance.toLocaleString("en-US", { style: "currency", currency: "USD" })}
-            </Text>
-          </Container>
-          <Flex justify="center" align="center">
-            <Container>
-              <Text size="sm">Account Reconciled: {account?.reconciled ? "Yes" : "No"}</Text>
-              <Text size="sm">
-                Reconciled Balance:{" "}
-                {account?.reconciledBalance.toLocaleString("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                })}
-              </Text>
-              <Text size="sm">
-                Last reconciled: {new Date(Date.parse(account?.lastReconciled)).toLocaleDateString("en-GB")}
-              </Text>
-              <Text size="sm">
-                Cleared Balance:{" "}
-                {clearedBalance.toLocaleString("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                })}
-              </Text>
-            </Container>
-            <Button bg="black" onClick={() => reconcileAccount(accountId)}>
-              Reconcile
-            </Button>
-          </Flex>
-        </Group>
-      </Paper>
+    <>
+      <AccountDetail account={account} transactions={transactions} />
       <Space h={8} />
       <TransactionsHeader account={account} />
       <Space h={8} />
-      <TransactionsTable transactions={transactions} accountCurrency={account.currency} />
-    </Container>
+      <TransactionsTable loading={transactionsLoading} transactions={transactions} accountCurrency={account.currency} />
+      {transactionsLoading && (
+        <Center p={24}>
+          <Loader variant="dots" color="black" />
+        </Center>
+      )}
+    </>
   );
 };
 

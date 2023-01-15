@@ -1,16 +1,25 @@
-import { LoadingOverlay } from "@mantine/core";
 import { ReactElement } from "react";
 import Landing from "../components/landing";
 import type { NextPageWithLayout } from "./_app";
+import { createStyles } from "@mantine/core";
+
+const useStyles = createStyles(() => ({
+  flex: {
+    display: "flex",
+    height: "200px",
+    width: "200px",
+    backgroundColor: "rgb(173,43,43)",
+    color: "white",
+    fontSize: "xxx-large",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+}));
 
 const Index: NextPageWithLayout = () => {
-  return (
-    <>
-      <LoadingOverlay visible={true} overlayBlur={2} />
-      <div>This is a test</div>
-    </>
-  );
-  // return <div>Landing Page</div>;
+  const { classes } = useStyles();
+
+  return <div className={classes.flex}>test</div>;
 };
 
 Index.getLayout = function getLayout(page: ReactElement) {

@@ -1,7 +1,8 @@
-import { Collapse } from "@mantine/core";
+import { Collapse, Group } from "@mantine/core";
 import shellStyle from "../../styles/shell.style";
 import { useRouter } from "next/router";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, ReactElement, SetStateAction, useState } from "react";
+import { IconChevronRight } from "@tabler/icons";
 
 type SidebarButtonProps = {
   buttonLink: { link: string; name: string };
@@ -9,6 +10,7 @@ type SidebarButtonProps = {
   openCollapsible?: boolean;
   collapsibleElem?: JSX.Element[];
   setSidebarOpened: Dispatch<SetStateAction<boolean>>;
+  children?: ReactElement;
 };
 
 export default function SidebarButton({
@@ -17,6 +19,7 @@ export default function SidebarButton({
   openCollapsible,
   collapsibleElem,
   setSidebarOpened,
+  children,
 }: SidebarButtonProps) {
   const router = useRouter();
   const currentPath = router.asPath.split("/")[2];
@@ -37,11 +40,22 @@ export default function SidebarButton({
           setActiveSelection(nameLowerCase);
           setSidebarOpened((prev) => !prev);
           collapsibleFn && collapsibleFn();
-          if (!collapsibleFn) router.push(link);
+          if (!collapsibleFn) void router.push(link);
         }}
       >
         <span>{name}</span>
+        {collapsibleFn && (
+          <IconChevronRight
+            className={classes.chevron}
+            size={14}
+            stroke={1.5}
+            style={{
+              transform: openCollapsible ? `rotate(${90}deg)` : "none",
+            }}
+          />
+        )}
       </a>
+      {children}
       <Collapse in={openCollapsible ?? false}>{collapsibleElem}</Collapse>
     </div>
   );
