@@ -1,25 +1,33 @@
+import { Button, Menu } from "@mantine/core";
+import { IconExternalLink } from "@tabler/icons";
 import { ReactElement } from "react";
 import Landing from "../components/landing";
 import type { NextPageWithLayout } from "./_app";
-import { createStyles } from "@mantine/core";
 
-const useStyles = createStyles(() => ({
-  flex: {
-    display: "flex",
-    height: "200px",
-    width: "200px",
-    backgroundColor: "rgb(173,43,43)",
-    color: "white",
-    fontSize: "xxx-large",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-}));
+const Form = () => {
+  return (
+    <form>
+      <input></input>
+    </form>
+  );
+};
 
 const Index: NextPageWithLayout = () => {
-  const { classes } = useStyles();
+  return (
+    <Menu width={200} shadow="md">
+      <Menu.Target>
+        <Button>Toggle menu</Button>
+      </Menu.Target>
 
-  return <div className={classes.flex}>test</div>;
+      <Menu.Dropdown>
+        <Menu.Item component={Form}>Mantine website</Menu.Item>
+
+        <Menu.Item icon={<IconExternalLink size={14} />} component="a" href="https://mantine.dev" target="_blank">
+          External link
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
+  );
 };
 
 Index.getLayout = function getLayout(page: ReactElement) {

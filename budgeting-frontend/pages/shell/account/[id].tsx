@@ -25,17 +25,30 @@ const AccountPage: NextPageWithLayout = () => {
   });
 
   if (!user) return null;
+
   const account = user.accounts.find((account) => account?._id === accountId);
   if (!account) return null;
+
   const transactions: Transaction[] = transactionsData?.getTransactionsFromAccount ?? [];
+
+  const sortedTransactions: Transaction[] = [...transactions].sort((a, b) => {
+    const first = new Date(Date.parse(a.date));
+    const second = new Date(Date.parse(b.date));
+
+    return second.getTime() - first.getTime();
+  });
 
   return (
     <>
-      <AccountDetail account={account} transactions={transactions} />
+      <AccountDetail account={account} transactions={sortedTransactions} />
       <Space h={8} />
       <TransactionsHeader account={account} />
       <Space h={8} />
-      <TransactionsTable loading={transactionsLoading} transactions={transactions} accountCurrency={account.currency} />
+      <TransactionsTable
+        loading={transactionsLoading}
+        transactions={sortedTransactions}
+        accountCurrency={account.currency}
+      />
       {transactionsLoading && (
         <Center p={24}>
           <Loader variant="dots" color="black" />

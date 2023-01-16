@@ -33,7 +33,7 @@ export default class UserResolver {
         return context.user;
     }
 
-    @Query(() => [User])
+    @Query(() => [ User ])
     getUsers() {
         return UserService.getUsers();
     }
@@ -51,7 +51,7 @@ export default class UserResolver {
     }
 
     @Authorized("admin", "user")
-    @Query(() => [Account])
+    @Query(() => [ Account ])
     getAccounts(@Arg("input") input: QueryAccountInput, @Ctx() context: Context) {
         const user = context.user;
         return AccountService.getAccounts({ ...input, user: user?._id as string });
@@ -72,29 +72,30 @@ export default class UserResolver {
     @Authorized("admin", "user")
     @Mutation(() => Account)
     reconcileAccount(
-        @Arg("accountId") accountId: string,
-        @Arg("newBalance") newBalance: number,
-        @Ctx() context: Context
+      @Arg("accountId") accountId: string,
+      @Arg("newBalance") newBalance: number,
+      @Ctx() context: Context
     ) {
         if (!context.user) throw new GraphQLError("User required to reconcile account");
         return AccountService.reconcileAccount(accountId, context.user._id, newBalance);
     }
 
     @Authorized("admin", "user")
-    @Mutation(() => [CategoryGroups])
+    @Mutation(() => [ CategoryGroups ])
     addCategoryGroup(@Arg("categoryGroup") categoryGroup: string, @Ctx() context: Context) {
         if (!context.user) throw new GraphQLError("User required to reconcile account");
         return UserService.addCategoryGroup(categoryGroup, context.user._id);
     }
 
     @Authorized("admin", "user")
-    @Mutation(() => [CategoryGroups])
+    @Mutation(() => [ CategoryGroups ])
     addCategory(
-        @Arg("categoryGroup") categoryGroup: string,
-        @Arg("category") category: string,
-        @Ctx() context: Context
+      @Arg("categoryGroup") categoryGroup: string,
+      @Arg("category") category: string,
+      @Ctx() context: Context
     ) {
-        if (!context.user) throw new GraphQLError("User required to reconcile account");
+        if (!context.user) throw new GraphQLError("User required to add category");
         return UserService.addCategory(categoryGroup, category, context.user._id);
     }
+
 }

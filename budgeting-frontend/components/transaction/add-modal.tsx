@@ -22,33 +22,38 @@ import GET_ME from "../../graphql/queries/get-me";
 import GET_TRANSACTIONS_FROM_ACCOUNT from "../../graphql/queries/get-transactions-from-account";
 import { Account, AddTransactionDetailInput, AddTransactionInput } from "../../graphql/__generated__/graphql";
 import { UserContext } from "../../layouts/shell";
-import TransactionModalLayout, { TransactionModalInputBase } from "./modal-layout";
+import TransactionModalLayout, { TransactionModalInputBase } from "./transaction-modal-layout";
 
 export type AddTransactionModalProps = {
   account: Account;
 };
 
 type AddTransactionModalInput = TransactionModalInputBase &
-  Pick<AddTransactionDetailInput, "amount" | "category" | "payee"> & { categoryGroup: string };
+  Pick<AddTransactionDetailInput, "amount" | "category" | "payee">;
 
 export default function AddModal({ context, id, innerProps }: ContextModalProps<AddTransactionModalProps>) {
   const user = useContext(UserContext);
   if (!user) throw new Error("User must be logged in");
   const { account } = innerProps;
   const [addTransactionMutation, { loading }] = useMutation(ADD_TRANSACTION);
+  const [flow, toggleFlow] = useToggle(["-", "+"] as const);
 
   const form = useForm<AddTransactionModalInput>({
     initialValues: {
       date: new Date(),
       amount: 0.0,
-      categoryGroup: "",
       category: "",
       payee: "",
     },
     validate: {
       amount: (value) =>
-        value === undefined ? "Must have an amount" : isNaN(value) ? "Amount must be a number" : null,
-      // categoryGroup: , // TODO: Validate
+        value === undefined
+          ? "Must have an amount"
+          : isNaN(value)
+          ? "Amount must be a number"
+          : value == 0
+          ? "Amount must be non-zero"
+          : null,
       // category: , // TODO: Validate
     },
   });
@@ -76,7 +81,7 @@ export default function AddModal({ context, id, innerProps }: ContextModalProps<
       cleared: false,
       transactionDetails: [
         {
-          amount: values.amount,
+          amount: flow === "-" ? -values.amount : values.amount,
           category: values.category,
           payee: values.payee,
         },
@@ -123,6 +128,8 @@ export default function AddModal({ context, id, innerProps }: ContextModalProps<
       account={account}
       user={user}
       onDateChange={(value) => form.setFieldValue("date", value)}
+      flow={flow}
+      toggleFlow={toggleFlow}
     />
   );
 }

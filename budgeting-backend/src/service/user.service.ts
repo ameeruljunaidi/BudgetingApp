@@ -94,6 +94,8 @@ const updateUser = async (updatedUser: User): Promise<User> => {
     const returnedUpdatedUser = await UserModel.findByIdAndUpdate(updatedUser._id, updatedUser, { new: true });
     if (!returnedUpdatedUser) throw new GraphQLError("Error updating user to the DB");
 
+    logger.info(returnedUpdatedUser.toObject().categoryGroups, "Returned updated user is");
+
     return returnedUpdatedUser;
 };
 
@@ -115,14 +117,27 @@ const addCategory = async (categoryGroup: string, category: string, userId: stri
     const user = await getUserById(userId);
 
     const findGroup = user.categoryGroups.find((group) => group.categoryGroup === categoryGroup);
-    if (!findGroup) throw new GraphQLError("Cannot find category group to add category to.");
+    const updatedGroups: CategoryGroups[] = findGroup
+        ? user.categoryGroups.map((group) =>
+              group.categoryGroup !== categoryGroup
+                  ? group
+                  : {
+                        ...group,
+                        categories: group.categories.concat(category),
+                    }
+          )
+        : user.categoryGroups.concat({
+              categoryGroup: categoryGroup,
+              categories: [category],
+          });
 
-    const updatedUser = {
+    logger.info(updatedGroups, "Updated groups are");
+
+    const updatedUser: User = {
         ...user,
-        categoryGroups: user.categoryGroups.map((group) =>
-            group.categoryGroup !== categoryGroup ? group : { ...group, categories: group.categories.concat(category) }
-        ),
+        categoryGroups: updatedGroups,
     };
+
     await updateUser(updatedUser);
     return updatedUser.categoryGroups;
 };
