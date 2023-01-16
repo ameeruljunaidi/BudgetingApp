@@ -22,45 +22,20 @@ import GET_ME from "../../graphql/queries/get-me";
 import GET_TRANSACTIONS_FROM_ACCOUNT from "../../graphql/queries/get-transactions-from-account";
 import { Account, AddTransactionDetailInput, AddTransactionInput } from "../../graphql/__generated__/graphql";
 import { UserContext } from "../../layouts/shell";
+import TransactionModalLayout, { TransactionModalInputBase } from "./modal-layout";
 
 export type AddTransactionModalProps = {
   account: Account;
 };
 
-type AddTransactionModalInput = Pick<AddTransactionInput, "date"> &
+type AddTransactionModalInput = TransactionModalInputBase &
   Pick<AddTransactionDetailInput, "amount" | "category" | "payee"> & { categoryGroup: string };
-
-const useStyles = createStyles((theme) => ({
-  selected: {
-    color: `${theme.white} !important`,
-    backgroundColor: `${theme.black} !important`,
-  },
-}));
-
-type SelectPayee = {
-  value: string;
-  label: string;
-};
-
-type SelectCategory = {
-  value: string;
-  label: string;
-  group: string;
-};
 
 export default function AddModal({ context, id, innerProps }: ContextModalProps<AddTransactionModalProps>) {
   const user = useContext(UserContext);
   if (!user) throw new Error("User must be logged in");
   const { account } = innerProps;
-  const { classes, cx } = useStyles();
-  const [flow, toggleFlow] = useToggle(["outflow", "inflow"] as const);
   const [addTransactionMutation, { loading }] = useMutation(ADD_TRANSACTION);
-  const [payees, setPayees] = useState<SelectPayee[]>(user.payees.map((payee) => ({ value: payee, label: payee })));
-  const [categories, setCategories] = useState<SelectCategory[]>(
-    user.categoryGroups.flatMap((group) =>
-      group.categories.map((category) => ({ value: category, label: category, group: group.categoryGroup }))
-    )
-  );
 
   const form = useForm<AddTransactionModalInput>({
     initialValues: {
@@ -91,14 +66,6 @@ export default function AddModal({ context, id, innerProps }: ContextModalProps<
       return;
     }
 
-    // prettier-ignore
-    const parsedAmount = !values.amount || isNaN(values.amount) ? 0 : values.amount; // ! TODO: Might need to fix this
-
-    const amountWithFlow =
-      (flow === "inflow" && parsedAmount < 0) || (flow === "outflow" && parsedAmount > 0)
-        ? -parsedAmount
-        : parsedAmount;
-
     const newTransaction: AddTransactionInput = {
       date: values.date,
       account: account.name ?? "",
@@ -109,7 +76,7 @@ export default function AddModal({ context, id, innerProps }: ContextModalProps<
       cleared: false,
       transactionDetails: [
         {
-          amount: amountWithFlow,
+          amount: values.amount,
           category: values.category,
           payee: values.payee,
         },
@@ -148,74 +115,14 @@ export default function AddModal({ context, id, innerProps }: ContextModalProps<
   };
 
   return (
-    <>
-      <LoadingOverlay visible={loading} overlayBlur={2} />
-      <form onSubmit={form.onSubmit(addTransaction, validateInfo)}>
-        <Flex justify="space-between" align="flex-end" wrap="nowrap" gap="sm">
-          <DatePicker
-            value={form.values.date}
-            onChange={(value) => form.setFieldValue("date", value)}
-            placeholder="Pick a date"
-            label="Date"
-            firstDayOfWeek="sunday"
-            dayClassName={(date, modifiers) =>
-              cx({
-                [classes.selected]: modifiers.selected,
-              })
-            }
-          />
-          <Select
-            {...form.getInputProps("payee")}
-            label="Payee"
-            placeholder="Choose or add."
-            data={payees.filter((payee) => payee.value !== "Reconciler")}
-            clearable
-            allowDeselect
-            nothingFound="Nothing found. Try adding one."
-            searchable
-            creatable
-            getCreateLabel={(query) => `+ Create ${query}`}
-            onCreate={(query) => {
-              const item = { value: query, label: query };
-              setPayees((current) => [...current, item]);
-              return item;
-            }}
-          />
-          <Group spacing="xs" align="flex-end" noWrap>
-            <Select
-              {...form.getInputProps("category")}
-              label="Category"
-              placeholder="Choose or add."
-              data={categories.filter((category) => category.value !== "Reconciler")}
-              clearable
-              allowDeselect
-              searchable
-              nothingFound="Nothing found."
-              getCreateLabel={(query) => `+ Create ${query}`}
-            />
-            <Tooltip label="Add a category group/category.">
-              <ActionIcon mb={4}>
-                <IconCirclePlus />
-              </ActionIcon>
-            </Tooltip>
-          </Group>
-          <Group position="apart" grow align="flex-end" noWrap>
-            <NumberInput
-              {...form.getInputProps("amount")}
-              type="number"
-              label={`Amount (${account.currency})`}
-              defaultValue={0}
-              hideControls
-            />
-            <Button onClick={() => toggleFlow()} color={flow === "inflow" ? "blue" : "red"} w={0} type="button">
-              {flow === "inflow" ? "Inflow" : "Outflow"}
-            </Button>
-          </Group>
-          <Button bg="black" type="submit">
-            Submit
-          </Button>
-        </Flex>
-      </form>
-    </>
+    <TransactionModalLayout
+      loading={loading}
+      form={form}
+      submitHandler={addTransaction}
+      validateInfo={validateInfo}
+      account={account}
+      user={user}
+      onDateChange={(value) => form.setFieldValue("date", value)}
+    />
   );
 }
