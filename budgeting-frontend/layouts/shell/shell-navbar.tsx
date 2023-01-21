@@ -60,6 +60,7 @@ export default function ShellNavbar({ sidebarOpened, setSidebarOpened, user }: S
                 modal: "addAccount",
                 title: "Add Account",
                 innerProps: {},
+                centered: true,
               });
             }}
           >

@@ -4,15 +4,6 @@ import { PaginatedResponse, PaginatedResponseType } from "../schema/pagination.s
 
 const getPagination = <T>(model: ReturnModelType<AnyParamConstructor<any>, BeAnObject>) => {
     const paginate = async (take: number = 25, endId: string | null): Promise<PaginatedResponseType<T>> => {
-        // db.students
-        //     .find({ _id: { $lt: startValue } })
-        //     .sort({ _id: -1 })
-        //     .limit(nPerPage)
-        //     .forEach((student) => {
-        //         print(student.name);
-        //         endId = student._id;
-        //     });
-
         const items = endId
             ? await model
                   .find({ _id: { $lt: endId } })

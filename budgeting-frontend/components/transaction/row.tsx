@@ -8,10 +8,10 @@ import DELETE_TRANSACTION from "../../graphql/mutations/delete-transaction";
 import UPDATE_TRANSACTION from "../../graphql/mutations/update-transaction";
 import GET_ME from "../../graphql/queries/get-me";
 import GET_TRANSACTIONS_FROM_ACCOUNT from "../../graphql/queries/get-transactions-from-account";
-import { Transaction, TransactionDetail, UpdateTransactionInput } from "../../graphql/__generated__/graphql";
+import { Account, Transaction, TransactionDetail, UpdateTransactionInput } from "../../graphql/__generated__/graphql";
 import useCurrency from "../../hooks/useCurrency";
 
-function Row({ transaction, accountCurrency }: { transaction: Transaction; accountCurrency: string }) {
+function Row({ transaction, account }: { transaction: Transaction; account: Account }) {
   const date = new Date(Date.parse(transaction.date)).toLocaleDateString("en-GB");
   const [deleteTransactionMutation, { loading: loadingDelete }] = useMutation(DELETE_TRANSACTION);
   const [updateTransactionMutation, { loading: loadingUpdate, client: updateClient }] = useMutation(UPDATE_TRANSACTION);
@@ -25,7 +25,7 @@ function Row({ transaction, accountCurrency }: { transaction: Transaction; accou
 
   const amount = aggregateTransactionDetail.amount;
 
-  const { printedAmount, flow } = useCurrency(amount, new Date(Date.parse(transaction.date)), accountCurrency);
+  const { printedAmount, flow } = useCurrency(amount, new Date(Date.parse(transaction.date)), account.currency);
 
   const handleClearTransaction = (transactionToUpdate: Transaction, accountId: string) => {
     const { __typename, _id, ...typenameRemoved } = transactionToUpdate;
@@ -89,7 +89,9 @@ function Row({ transaction, accountCurrency }: { transaction: Transaction; accou
     openContextModal({
       modal: "editTransaction",
       title: "Edit Transaction",
-      innerProps: { transaction },
+      innerProps: { transaction, account },
+      size: "auto",
+      centered: true,
     });
   };
 

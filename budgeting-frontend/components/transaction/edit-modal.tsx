@@ -1,88 +1,51 @@
 import { useMutation } from "@apollo/client";
-import { Button, createStyles, LoadingOverlay, Select, Stack, TextInput } from "@mantine/core";
-import { DatePicker } from "@mantine/dates";
 import { FormErrors, useForm } from "@mantine/form";
 import { ContextModalProps } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import { IconX } from "@tabler/icons";
-import { FormEvent, useContext, useState } from "react";
+import { FormEvent, useContext } from "react";
 import UPDATE_TRANSACTION from "../../graphql/mutations/update-transaction";
 import GET_ME from "../../graphql/queries/get-me";
 import GET_TRANSACTIONS_FROM_ACCOUNT from "../../graphql/queries/get-transactions-from-account";
-import { AddTransactionDetailInput, Transaction, UpdateTransactionInput } from "../../graphql/__generated__/graphql";
+import { Account, Transaction, UpdateTransactionInput } from "../../graphql/__generated__/graphql";
 import { UserContext } from "../../layouts/shell";
+import TransactionModalLayout, { TransactionModalInputBase } from "./transaction-modal-layout";
+import { useToggle } from "@mantine/hooks";
 
 export type EditTransactionModalProps = {
   transaction: Transaction;
-};
-
-type EditTransactionModalInput = Pick<UpdateTransactionInput, "date"> &
-  Pick<AddTransactionDetailInput, "amount" | "category" | "payee"> & { categoryGroup: string };
-
-const useStyles = createStyles((theme) => ({
-  selected: {
-    color: `${theme.white} !important`,
-    backgroundColor: `${theme.black} !important`,
-  },
-}));
-
-type SelectType = {
-  value: string;
-  label: string;
+  account: Account;
 };
 
 export default function EditModal({ context, id, innerProps }: ContextModalProps<EditTransactionModalProps>) {
   const user = useContext(UserContext);
   if (!user) throw new Error("User must be logged in");
-
-  const { transaction } = innerProps;
-
-  const { classes, cx } = useStyles();
-
-  const categoryGroupFromUser = user.categoryGroups.find((group) =>
-    group.categories.find((category) => category === transaction.transactionDetails[0].category)
-  );
-  if (!categoryGroupFromUser) throw new Error("Cannot find category group from user");
-
-  const availableCategoryGroups = user.categoryGroups.map((group) => ({
-    value: group.categoryGroup,
-    label: group.categoryGroup,
-  }));
-  const initialSelectedCategoryGroup = categoryGroupFromUser.categoryGroup;
-  const initialAvailableCategories = categoryGroupFromUser.categories.map((category) => ({
-    value: category,
-    label: category,
-  }));
-  const initialAvailablePayees = user.payees.map((payee) => ({ value: payee, label: payee }));
-
-  const [selectedCategoryGroup, setSelectedCategoryGroup] = useState<string>(initialSelectedCategoryGroup);
-  const [availableCategories, setAvailableCategories] = useState<SelectType[]>(initialAvailableCategories);
-  const [availablePayees, setPayees] = useState<SelectType[]>(initialAvailablePayees);
-
+  const [flow, toggleFlow] = useToggle(["-", "+"] as const);
+  const { transaction, account } = innerProps;
   const [updateTransactionMutation, { loading }] = useMutation(UPDATE_TRANSACTION);
 
-  const form = useForm<EditTransactionModalInput>({
+  const form = useForm<TransactionModalInputBase>({
     initialValues: {
       date: new Date(Date.parse(transaction.date)),
-      amount: transaction.transactionDetails[0].amount,
+      amount: Math.abs(transaction.transactionDetails[0].amount).toString(),
       category: transaction.transactionDetails[0].category,
-      categoryGroup: selectedCategoryGroup,
       payee: transaction.transactionDetails[0].payee,
     },
     validate: {
-      amount: (value) =>
-        value === undefined ? "Must have an amount" : isNaN(value) ? "Amount must be a number" : null,
-      category: (value) =>
-        !!availableCategories?.find((category) => category.value === value) ? null : "Invalid category.",
-      categoryGroup: (value) =>
-        !!availableCategoryGroups?.find((categoryGroup) => categoryGroup.value === value)
-          ? null
-          : "Invalid category group",
-      payee: (value) => (!!availablePayees?.find((payee) => payee.value === value) ? null : "Invalid payee"),
+      amount: (value) => {
+        const floatValue = parseFloat(value);
+        return value === undefined
+          ? "Must have an amount"
+          : isNaN(floatValue)
+          ? "Amount must be a number"
+          : floatValue == 0
+          ? "Amount must be non-zero"
+          : null;
+      },
     },
   });
 
-  const updateTransaction = (values: EditTransactionModalInput, _event: FormEvent<HTMLFormElement>) => {
+  const updateTransaction = (values: TransactionModalInputBase, _event: FormEvent<HTMLFormElement>) => {
     if (!user) {
       form.reset();
       context.closeModal(id);
@@ -109,12 +72,6 @@ export default function EditModal({ context, id, innerProps }: ContextModalProps
       return;
     }
 
-    // prettier-ignore
-    const parsedAmount = !values.amount ? 0
-            : isNaN(values.amount) ? 0
-                : typeof values.amount === "string" ? parseFloat(values.amount)
-                    : values.amount;
-
     const updatedTransaction: UpdateTransactionInput = {
       id: transaction._id,
       date: values.date,
@@ -127,14 +84,14 @@ export default function EditModal({ context, id, innerProps }: ContextModalProps
       scheduledDates: transaction.scheduledDates,
       transactionDetails: [
         {
-          amount: parsedAmount,
+          amount: flow === "-" ? -parseFloat(values.amount) : parseFloat(values.amount),
           category: values.category,
           payee: values.payee,
         },
       ],
     };
 
-    updateTransactionMutation({
+    void updateTransactionMutation({
       variables: { transaction: updatedTransaction },
       refetchQueries: [
         { query: GET_TRANSACTIONS_FROM_ACCOUNT, variables: { accountId: transaction.account } },
@@ -159,85 +116,23 @@ export default function EditModal({ context, id, innerProps }: ContextModalProps
 
   const validateInfo = (
     validationErrors: FormErrors,
-    _values: EditTransactionModalInput,
+    _values: TransactionModalInputBase,
     _event: FormEvent<HTMLFormElement>
   ) => {
     console.log(validationErrors);
   };
 
-  const handleCategoryGroupChange = (newCategoryGroup: string) => {
-    setSelectedCategoryGroup(newCategoryGroup);
-
-    const newCategoryGroupFromUser = user.categoryGroups.find((group) => group.categoryGroup === newCategoryGroup);
-    if (!newCategoryGroupFromUser) throw new Error("Cannot find category group from user");
-
-    const newAvailableCategories = newCategoryGroupFromUser.categories.map((category) => ({
-      value: category,
-      label: category,
-    }));
-
-    form.setFieldValue("category", "");
-    setAvailableCategories(newAvailableCategories);
-  };
-
   return (
-    <>
-      <LoadingOverlay visible={loading} overlayBlur={2} />
-      <form onSubmit={form.onSubmit(updateTransaction, validateInfo)}>
-        <Stack spacing="xs">
-          {/* Date */}
-          <DatePicker
-            value={form.values.date}
-            onChange={(value) => form.setFieldValue("date", value)}
-            label="Transaction Date"
-            firstDayOfWeek="sunday"
-            dayClassName={(date, modifiers) =>
-              cx({
-                [classes.selected]: modifiers.selected,
-              })
-            }
-          />
-
-          {/* Payee */}
-          <Select
-            label="Payee"
-            data={availablePayees}
-            {...form.getInputProps("payee")}
-            nothingFound="Nothing found"
-            searchable
-            creatable
-            getCreateLabel={(query) => `+ Create ${query}`}
-            onCreate={(query) => {
-              const item = { value: query, label: query };
-              setPayees((current) => [...current, item]);
-              return item;
-            }}
-          />
-
-          {/* Category Group */}
-          <Select
-            label="Category Group"
-            data={availableCategoryGroups}
-            value={selectedCategoryGroup}
-            onChange={handleCategoryGroupChange}
-          />
-
-          {/* Category */}
-          <Select
-            label="Category"
-            data={availableCategories}
-            {...form.getInputProps("category")}
-            placeholder="Choose A Category"
-          />
-
-          {/* Amount */}
-          <TextInput type="number" label="Amount" {...form.getInputProps("amount")} />
-
-          <Button bg="black" type="submit">
-            Save
-          </Button>
-        </Stack>
-      </form>
-    </>
+    <TransactionModalLayout
+      loading={loading}
+      form={form}
+      submitHandler={updateTransaction}
+      validateInfo={validateInfo}
+      account={account}
+      user={user}
+      onDateChange={(value) => form.setFieldValue("date", value)}
+      flow={flow}
+      toggleFlow={toggleFlow}
+    />
   );
 }

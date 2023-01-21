@@ -6,7 +6,6 @@ import {
   Flex,
   Group,
   LoadingOverlay,
-  Menu,
   NumberInput,
   Popover,
   Select,
@@ -17,7 +16,7 @@ import {
 import { DatePicker } from "@mantine/dates";
 import { FormErrors, useForm, UseFormReturnType } from "@mantine/form";
 import { IconCirclePlus, IconX } from "@tabler/icons";
-import { FormEvent, SetStateAction, useState, MouseEvent } from "react";
+import { FormEvent, SetStateAction, useState } from "react";
 import { Account, Scalars, User } from "../../graphql/__generated__/graphql";
 import { useMutation } from "@apollo/client";
 import ADD_CATEGORY from "../../graphql/mutations/add-category";
@@ -57,6 +56,9 @@ type SelectGroupType = {
 
 export type TransactionModalInputBase = {
   date: Scalars["DateTime"];
+  amount: string;
+  category: string;
+  payee: string;
 };
 
 type AddCategoryInput = {
@@ -227,13 +229,7 @@ const TransactionModalLayout = <T extends TransactionModalInputBase>({
                 {flow}
               </Button>
             </Tooltip>
-            <NumberInput
-              {...form.getInputProps("amount")}
-              type="number"
-              label={`Amount (${account.currency})`}
-              defaultValue={0}
-              hideControls
-            />
+            <TextInput {...form.getInputProps("amount")} label={`Amount (${account.currency})`} />
           </Group>
           <Button bg="black" type="submit">
             Submit
@@ -243,4 +239,5 @@ const TransactionModalLayout = <T extends TransactionModalInputBase>({
     </>
   );
 };
+
 export default TransactionModalLayout;

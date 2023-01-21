@@ -41,10 +41,16 @@ type Mutation {
     deleteAccount(accountId: String!): Account!
     deleteTransaction(accountId: String!, transactionId: String!): Transaction!
     deleteUser: User!
+    editAccount(input: EditAccountInput!): Account!
     login(input: LoginInput!): String!
     reconcileAccount(accountId: String!, newBalance: Float!): Account!
     updateAccount(input: UpdateAccountInput!): Account!
     updateTransaction(transaction: UpdateTransactionInput!): Transaction!
+}
+
+type PaginatedResponseClass {
+    hasMore: Boolean!
+    items: [Transaction!]!
 }
 
 type Query {
@@ -52,6 +58,7 @@ type Query {
     getAccounts(input: QueryAccountInput!): [Account!]!
     getTransactions(input: QueryTransactionsInput!): [Transaction!]!
     getTransactionsFromAccount(accountId: String!): [Transaction!]!
+    getTransactionsFromAccountPaginated(accountId: String!, skip: Float!, take: Float! = 25.0): PaginatedResponseClass!
     getUsers: [User!]!
     me: User
 }
@@ -129,6 +136,11 @@ input CreateUserInput {
     name: String!
     password: String!
     role: String = "user"
+}
+
+input EditAccountInput {
+    _id: String!
+    name: String!
 }
 
 input LoginInput {

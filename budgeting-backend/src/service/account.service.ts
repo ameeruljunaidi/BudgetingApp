@@ -10,6 +10,7 @@ import { GraphQLError } from "graphql";
 import TransactionService from "./transaction.service";
 import Transaction, { TransactionModel } from "../schema/transaction.schema";
 import Context from "../types/context";
+import EditAccountInput from "../schema/account/editAccount.input";
 
 const logger = myLogger(path.basename(__filename));
 
@@ -76,8 +77,7 @@ const deleteAccount = async (context: Context, accountId: string): Promise<Accou
     return account;
 };
 
-const updateAccount = async (input: UpdateAccountInput) => {
-};
+const updateAccount = async (input: UpdateAccountInput) => {};
 
 const convertClearedTransactions = async (accountId: Account["_id"], userId: User["_id"]): Promise<Transaction[]> => {
     const user = await UserService.getUserById(userId);
@@ -121,7 +121,7 @@ const reconcileAccount = async (
         date: new Date(),
         reconciled: true,
         scheduled: false,
-        transactionDetails: [ { amount: difference, category: "Reconciler", payee: "Reconciler" } ],
+        transactionDetails: [{ amount: difference, category: "Reconciler", payee: "Reconciler" }],
         user: userId,
     });
     const newUser = await UserService.getUserById(userId);
@@ -143,4 +143,22 @@ const reconcileAccount = async (
     return UserService.getAccountById(savedUser, accountId);
 };
 
-export default { addAccount, getAccounts, deleteAccount, updateAccount, reconcileAccount };
+const editAccount = async (context: Context, input: EditAccountInput): Promise<Account> => {
+    const userFromContext = context.user;
+    if (!userFromContext) throw new GraphQLError("User must be logged in to edit account");
+    const user = await UserService.getUserById(userFromContext._id);
+
+    const accountFound = user.accounts.find((account) => account._id.toString() === input._id);
+    if (!accountFound) throw new GraphQLError("Account not found");
+
+    const updatedAccount: Account = { ...accountFound, name: input.name };
+    const updatedUser: User = {
+        ...user,
+        accounts: user.accounts.map((account) => (account._id.toString() !== input._id ? account : updatedAccount)),
+    };
+    await UserService.updateUser(updatedUser);
+
+    return updatedAccount;
+};
+
+export default { addAccount, getAccounts, deleteAccount, updateAccount, reconcileAccount, editAccount };

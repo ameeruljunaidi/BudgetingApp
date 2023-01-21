@@ -7,14 +7,15 @@ import { useRouter } from "next/router";
 import ClientOnly from "../../components/client-only";
 import AddAccountModal from "../../components/account/add-account-modal";
 import ReconcileAccountModal from "../../components/account/reconcile-account-modal";
-import AddModal from "../../components/transaction/add-modal";
-import EditModal from "../../components/transaction/edit-modal";
+import AddTransactionModal from "../../components/transaction/add-modal";
+import EditTransactionModal from "../../components/transaction/edit-modal";
 
 import { useQuery } from "@apollo/client";
 import GET_ME from "../../graphql/queries/get-me";
 import { User } from "../../graphql/__generated__/graphql";
 import ShellNavbar from "./shell-navbar";
 import ShellHeader from "./shell-header";
+import EditAccountModal from "../../components/account/edit-account-modal";
 
 export const UserContext = createContext<User | null>(null);
 export const CurrencyContext = createContext<string>("CAD");
@@ -45,9 +46,10 @@ export default function Shell({ children }: { children: ReactElement }) {
           <ModalsProvider
             modals={{
               reconcileAccount: ReconcileAccountModal,
-              addTransaction: AddModal,
-              editTransaction: EditModal,
+              addTransaction: AddTransactionModal,
+              editTransaction: EditTransactionModal,
               addAccount: AddAccountModal,
+              editAccount: EditAccountModal,
             }}
             labels={{ confirm: "Submit", cancel: "Cancel" }}
           >

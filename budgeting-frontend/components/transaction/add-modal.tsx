@@ -23,13 +23,11 @@ import GET_TRANSACTIONS_FROM_ACCOUNT from "../../graphql/queries/get-transaction
 import { Account, AddTransactionDetailInput, AddTransactionInput } from "../../graphql/__generated__/graphql";
 import { UserContext } from "../../layouts/shell";
 import TransactionModalLayout, { TransactionModalInputBase } from "./transaction-modal-layout";
+import { formatMonthLabel } from "@mantine/dates/lib/components/CalendarBase/MonthsList/format-month-label/format-month-label";
 
 export type AddTransactionModalProps = {
   account: Account;
 };
-
-type AddTransactionModalInput = TransactionModalInputBase &
-  Pick<AddTransactionDetailInput, "amount" | "category" | "payee">;
 
 export default function AddModal({ context, id, innerProps }: ContextModalProps<AddTransactionModalProps>) {
   const user = useContext(UserContext);
@@ -38,27 +36,29 @@ export default function AddModal({ context, id, innerProps }: ContextModalProps<
   const [addTransactionMutation, { loading }] = useMutation(ADD_TRANSACTION);
   const [flow, toggleFlow] = useToggle(["-", "+"] as const);
 
-  const form = useForm<AddTransactionModalInput>({
+  const form = useForm<TransactionModalInputBase>({
     initialValues: {
       date: new Date(),
-      amount: 0.0,
+      amount: "0.00",
       category: "",
       payee: "",
     },
     validate: {
-      amount: (value) =>
-        value === undefined
+      amount: (value) => {
+        const floatValue = parseFloat(value);
+        return value === undefined
           ? "Must have an amount"
-          : isNaN(value)
+          : isNaN(floatValue)
           ? "Amount must be a number"
-          : value == 0
+          : floatValue == 0
           ? "Amount must be non-zero"
-          : null,
+          : null;
+      },
       // category: , // TODO: Validate
     },
   });
 
-  const addTransaction = (values: AddTransactionModalInput, _event: FormEvent<HTMLFormElement>) => {
+  const addTransaction = (values: TransactionModalInputBase, _event: FormEvent<HTMLFormElement>) => {
     if (!account) {
       form.reset();
       context.closeModal(id);
@@ -81,7 +81,7 @@ export default function AddModal({ context, id, innerProps }: ContextModalProps<
       cleared: false,
       transactionDetails: [
         {
-          amount: flow === "-" ? -values.amount : values.amount,
+          amount: flow === "-" ? -parseFloat(values.amount) : parseFloat(values.amount),
           category: values.category,
           payee: values.payee,
         },
@@ -113,7 +113,7 @@ export default function AddModal({ context, id, innerProps }: ContextModalProps<
 
   const validateInfo = (
     validationErrors: FormErrors,
-    _values: AddTransactionModalInput,
+    _values: TransactionModalInputBase,
     _event: FormEvent<HTMLFormElement>
   ) => {
     console.log(validationErrors);

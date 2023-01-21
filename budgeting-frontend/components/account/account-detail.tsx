@@ -1,7 +1,9 @@
-import { Button, Container, Flex, Group, Paper, Text } from "@mantine/core";
+import { ActionIcon, Button, Container, Flex, Group, Paper, Text } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { Account, Transaction } from "../../graphql/__generated__/graphql";
 import { useRouter } from "next/router";
+import { FETCH_CACHE_HEADER } from "next/dist/client/components/app-router-headers";
+import { IconEdit } from "@tabler/icons";
 
 type AccountDetailProp = {
   account: Account;
@@ -20,9 +22,23 @@ export default function AccountDetail({ account, transactions }: AccountDetailPr
     <Paper bg="white" withBorder>
       <Group position="apart" grow px="md" py="sm">
         <Container p={0}>
-          <Text size="lg" weight={700}>
-            {account?.name}
-          </Text>
+          <Flex gap="xs" align="center">
+            <Text size="lg" weight={700}>
+              {account?.name}
+            </Text>
+            <ActionIcon
+              onClick={() => {
+                openContextModal({
+                  modal: "editAccount",
+                  title: "Edit Account",
+                  innerProps: { account },
+                  centered: true,
+                });
+              }}
+            >
+              <IconEdit />
+            </ActionIcon>
+          </Flex>
           <Text size="sm">Currency: {account?.currency}</Text>
           <Text size="sm">
             Balance: {account?.balance.toLocaleString("en-US", { style: "currency", currency: "USD" })}

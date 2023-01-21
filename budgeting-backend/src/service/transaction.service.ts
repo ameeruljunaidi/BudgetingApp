@@ -12,6 +12,7 @@ import UserService from "./user.service";
 import _ from "lodash";
 import UpdateTransactionInput from "../schema/transaction/updateTransactionInput";
 import Context from "../types/context";
+import { PaginatedResponseType } from "../schema/pagination.schema";
 
 const logger = myLogger(path.basename(__filename));
 
@@ -207,4 +208,34 @@ const deleteTransaction = async (transactionId: string, accountId: string, conte
     return returnedTransaction;
 };
 
-export default { addTransaction, getTransactions, getTransactionsFromAccount, updateTransaction, deleteTransaction };
+const getTransactionFromAccountPaginated = async (
+    context: Context,
+    accountId: string,
+    take: number,
+    skip: number
+): Promise<PaginatedResponseType<Transaction>> => {
+    const user = context.user;
+    if (!user) throw new GraphQLError("Cannot find logged in user");
+
+    const account = user.accounts.find((account) => account._id.toString() === accountId);
+    if (!account) throw new GraphQLError("Account not found.");
+
+    // const transactions = await TransactionModel.find({ _id: { $in: account.transactions } }).lean();
+    // if (!transactions) return [];
+
+    const transactions = await TransactionModel.find({ _id: { $in: account.transactions } })
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(take);
+
+    return { items: transactions, hasMore: true };
+};
+
+export default {
+    addTransaction,
+    getTransactions,
+    getTransactionsFromAccount,
+    updateTransaction,
+    deleteTransaction,
+    getTransactionFromAccountPaginated,
+};

@@ -1,14 +1,14 @@
 import { Center, Loader, Table, Text } from "@mantine/core";
-import { Transaction } from "../../graphql/__generated__/graphql";
+import { Account, Transaction } from "../../graphql/__generated__/graphql";
 import TransactionRow from "./row";
 
 type TransactionTableProps = {
   loading: boolean;
   transactions: Transaction[];
-  accountCurrency: string;
+  account: Account;
 };
 
-export default function TransactionTable({ loading, transactions, accountCurrency }: TransactionTableProps) {
+export default function TransactionTable({ loading, transactions, account }: TransactionTableProps) {
   if (!loading && transactions.length === 0) {
     return (
       <Center p={24}>
@@ -30,7 +30,7 @@ export default function TransactionTable({ loading, transactions, accountCurrenc
       </thead>
       <tbody>
         {transactions.map((transaction) => {
-          return <TransactionRow key={transaction._id} transaction={transaction} accountCurrency={accountCurrency} />;
+          return <TransactionRow key={transaction._id} transaction={transaction} account={account} />;
         })}
       </tbody>
     </Table>
