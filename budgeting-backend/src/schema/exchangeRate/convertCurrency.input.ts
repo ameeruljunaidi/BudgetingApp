@@ -11,6 +11,6 @@ export default class ConvertCurrencyInput {
     @Field(() => String)
     date: string;
 
-    @Field(() => String)
+    @Field(() => Number)
     amount: number;
 }

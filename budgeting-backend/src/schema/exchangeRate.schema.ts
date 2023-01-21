@@ -1,4 +1,4 @@
-import { getModelForClass, prop } from "@typegoose/typegoose";
+import { getModelForClass, modelOptions, prop } from "@typegoose/typegoose";
 import { Field, ObjectType } from "type-graphql";
 
 @ObjectType()
@@ -18,13 +18,13 @@ export default class ExchangeRate {
     @prop({ required: true })
     date: string;
 
-    @Field(() => String)
+    @Field(() => Number)
     @prop({ required: true })
-    amount: string;
+    amount: number;
 
     @Field(() => Number)
     @prop({ required: true })
-    storedResult: number;
+    result: number;
 }
 
 export const ExchangeRateModel = getModelForClass<typeof ExchangeRate>(ExchangeRate);

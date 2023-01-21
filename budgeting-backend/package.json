@@ -8,16 +8,19 @@
         "dev": "NODE_ENV=development ts-node-dev src/index.ts",
         "dev:reset": "NODE_ENV=development ts-node src/utils/resetDb.ts",
         "tsc": "tsc",
-        "test": "NODE_ENV=test PINO_LOG=false yarn jest --verbose true --runInBand --forceExit"
+        "test": "NODE_ENV=test PINO_LOG=false yarn jest --verbose true --runInBand --forceExit",
+        "dev:faker": "NODE_ENV=development ts-node-dev src/faker/main.ts"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "dependencies": {
         "@apollo/server": "^4.2.2",
+        "@ngneat/falso": "^6.4.0",
         "@typegoose/typegoose": "^9.13.2",
         "bcrypt": "^5.1.0",
         "class-validator": "^0.13.0",
+        "cookie-parser": "^1.4.6",
         "cors": "^2.8.5",
         "dotenv": "^16.0.3",
         "express": "^4.18.2",
@@ -36,6 +39,7 @@
     "devDependencies": {
         "@jest/globals": "^29.3.1",
         "@types/bcrypt": "^5.0.0",
+        "@types/cookie-parser": "^1.4.3",
         "@types/cors": "^2.8.13",
         "@types/jest": "^29.2.4",
         "@types/jsonwebtoken": "^8.5.9",

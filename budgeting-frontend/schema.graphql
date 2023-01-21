@@ -1,0 +1,188 @@
+# This file was generated based on ".graphqlconfig". Do not edit manually.
+
+schema {
+    query: Query
+    mutation: Mutation
+}
+
+type Account {
+    _id: String!
+    active: Boolean!
+    balance: Float!
+    currency: String!
+    lastReconciled: DateTime!
+    name: String!
+    reconciled: Boolean!
+    reconciledBalance: Float!
+    transactions: [String]!
+    type: String!
+}
+
+type CategoryGroups {
+    categories: [String!]!
+    categoryGroup: String!
+}
+
+type ExchangeRate {
+    _id: String!
+    amount: Float!
+    date: String!
+    from: String!
+    result: Float!
+    to: String!
+}
+
+type Mutation {
+    addAccount(input: AddAccountInput!): Account!
+    addCategory(category: String!, categoryGroup: String!): [CategoryGroups!]!
+    addCategoryGroup(categoryGroup: String!): [CategoryGroups!]!
+    addTransaction(input: AddTransactionInput!): Transaction!
+    createUser(input: CreateUserInput!): User!
+    deleteAccount(accountId: String!): Account!
+    deleteTransaction(accountId: String!, transactionId: String!): Transaction!
+    deleteUser: User!
+    editAccount(input: EditAccountInput!): Account!
+    login(input: LoginInput!): String!
+    reconcileAccount(accountId: String!, newBalance: Float!): Account!
+    updateAccount(input: UpdateAccountInput!): Account!
+    updateTransaction(transaction: UpdateTransactionInput!): Transaction!
+}
+
+type PaginatedResponseClass {
+    hasMore: Boolean!
+    items: [Transaction!]!
+}
+
+type Query {
+    convertCurrency(input: ConvertCurrencyInput!): ExchangeRate!
+    getAccounts(input: QueryAccountInput!): [Account!]!
+    getTransactions(input: QueryTransactionsInput!): [Transaction!]!
+    getTransactionsFromAccount(accountId: String!): [Transaction!]!
+    getTransactionsFromAccountPaginated(accountId: String!, skip: Float!, take: Float! = 25.0): PaginatedResponseClass!
+    getUsers: [User!]!
+    me: User
+}
+
+type Transaction {
+    _id: String!
+    account: String!
+    approved: Boolean!
+    cleared: Boolean!
+    currency: String!
+    date: DateTime!
+    reconciled: Boolean!
+    scheduled: Boolean!
+    scheduledDates: [String!]!
+    transactionDetails: [TransactionDetail!]!
+}
+
+type TransactionDetail {
+    amount: Float!
+    category: String!
+    payee: String!
+}
+
+"User of the app."
+type User {
+    "Unique ID of the user."
+    _id: String!
+    accounts: [Account!]!
+    categoryGroups: [CategoryGroups!]!
+    "Unique email of the user. Can be indexed for quicker lookups."
+    email: String!
+    "The name of the user. Does not need to be unique."
+    name: String!
+    payees: [String!]!
+    "Role of the user in the app i.e. Admin, User, or Guest."
+    role: String!
+}
+
+"The javascript `Date` as string. Type represents date and time as the ISO Date string."
+scalar DateTime
+
+input AddAccountInput {
+    balance: Float
+    currency: String
+    name: String!
+    type: String!
+}
+
+input AddTransactionDetailInput {
+    amount: Float!
+    category: String!
+    payee: String!
+}
+
+input AddTransactionInput {
+    account: String!
+    approved: Boolean!
+    cleared: Boolean!
+    currency: String!
+    date: DateTime!
+    reconciled: Boolean!
+    scheduled: Boolean!
+    transactionDetails: [AddTransactionDetailInput!]!
+}
+
+input ConvertCurrencyInput {
+    amount: Float!
+    date: String!
+    from: String!
+    to: String!
+}
+
+input CreateUserInput {
+    email: String!
+    name: String!
+    password: String!
+    role: String = "user"
+}
+
+input EditAccountInput {
+    _id: String!
+    name: String!
+}
+
+input LoginInput {
+    email: String!
+    password: String!
+}
+
+input QueryAccountInput {
+    active: Boolean
+    currency: [String!]
+    name: String
+    transactions: String
+}
+
+input QueryTransactionsInput {
+    account: [String!]
+    amount: [Float!]
+    approved: [Boolean!]
+    categories: [String!]
+    currency: [String!]
+    payee: [String!]
+    reconciled: [Boolean!]
+    scheduled: [Boolean!]
+}
+
+input UpdateAccountInput {
+    balance: Float
+    currency: String
+    id: String!
+    name: String!
+    type: String!
+}
+
+input UpdateTransactionInput {
+    account: String!
+    approved: Boolean!
+    cleared: Boolean!
+    currency: String!
+    date: DateTime!
+    id: String!
+    reconciled: Boolean!
+    scheduled: Boolean!
+    scheduledDates: [String!]!
+    transactionDetails: [AddTransactionDetailInput!]!
+}

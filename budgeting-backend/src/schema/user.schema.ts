@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import Account from "./account.schema";
 import descriptions from "../utils/descriptions";
 import uniqueValidator from "mongoose-unique-validator";
+import CategoryGroup from "./category.schema";
 
 export type Role = "admin" | "user" | "guest";
 
@@ -37,21 +38,32 @@ export default class User {
     @prop({ required: true, default: "user" })
     role: string;
 
-    @Field(() => [Account], { defaultValue: [], nullable: "items" })
+    @Field(() => [Account], { defaultValue: [] })
     @prop({ required: true, type: () => [Account] })
     accounts: Account[];
 
-    @Field(() => [String])
-    @prop({ required: true, type: () => [String], default: ["Main Category Group"] })
-    categoryGroups: string[];
+    @Field(() => [CategoryGroup], { defaultValue: [] })
+    @prop({ _id: false, required: true, type: () => [CategoryGroup] })
+    categoryGroups: CategoryGroup[];
 
     @Field(() => [String])
-    @prop({ required: true, default: ["Main Category"] })
-    categories: string[];
-
-    @Field(() => [String])
-    @prop({ required: true, type: () => [String], default: ["Main Payee"] })
+    @prop({ required: true, type: () => [String] })
     payees: string[];
 }
 
 export const UserModel = getModelForClass<typeof User>(User);
+
+@ObjectType()
+export class UserToken {
+    @Field(() => String, { description: descriptions.USER_ID })
+    _id: string;
+
+    @Field(() => String, { description: descriptions.USER_NAME })
+    name: string;
+
+    @Field(() => String, { description: descriptions.USER_EMAIL })
+    email: string;
+
+    @Field(() => String, { description: descriptions.USER_ROLE })
+    role: string;
+}

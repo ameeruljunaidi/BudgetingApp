@@ -8,18 +8,24 @@ import Account from "../schema/account.schema";
 import AddAccountInput from "../schema/account/addAccount.input";
 import QueryAccountInput from "../schema/account/queryAccount.input";
 import UpdateAccountInput from "../schema/account/updateAccount.input";
-import DeleteAccountInput from "../schema/account/deleteAccount.input";
 import AccountService from "../service/account.service";
+import { GraphQLError } from "graphql";
+import CategoryGroups from "../schema/category.schema";
+import myLogger from "../utils/logger";
+import path from "path";
+import EditAccountInput from "../schema/account/editAccount.input";
 
+const logger = myLogger(path.basename(__filename));
 @Resolver()
 export default class UserResolver {
     @Mutation(() => User)
     createUser(@Arg("input") input: CreateUserInput) {
-        return UserService.createUser(input)
+        return UserService.createUser(input);
     }
 
     @Mutation(() => String)
     login(@Arg("input") input: LoginInput, @Ctx() context: Context) {
+        logger.info(context, "Context in resolver");
         return UserService.login(input, context);
     }
 
@@ -28,7 +34,6 @@ export default class UserResolver {
         return context.user;
     }
 
-    @Authorized("admin")
     @Query(() => [User])
     getUsers() {
         return UserService.getUsers();
@@ -61,7 +66,42 @@ export default class UserResolver {
 
     @Authorized("admin", "user")
     @Mutation(() => Account)
-    deleteAccount(@Arg("input") input: DeleteAccountInput) {
-        return AccountService.deleteAccount(input);
+    deleteAccount(@Arg("accountId") accountId: string, @Ctx() context: Context) {
+        return AccountService.deleteAccount(context, accountId);
+    }
+
+    @Authorized("admin", "user")
+    @Mutation(() => Account)
+    editAccount(@Arg("input") input: EditAccountInput, @Ctx() context: Context) {
+        return AccountService.editAccount(context, input);
+    }
+
+    @Authorized("admin", "user")
+    @Mutation(() => Account)
+    reconcileAccount(
+        @Arg("accountId") accountId: string,
+        @Arg("newBalance") newBalance: number,
+        @Ctx() context: Context
+    ) {
+        if (!context.user) throw new GraphQLError("User required to reconcile account");
+        return AccountService.reconcileAccount(accountId, context.user._id, newBalance);
+    }
+
+    @Authorized("admin", "user")
+    @Mutation(() => [CategoryGroups])
+    addCategoryGroup(@Arg("categoryGroup") categoryGroup: string, @Ctx() context: Context) {
+        if (!context.user) throw new GraphQLError("User required to reconcile account");
+        return UserService.addCategoryGroup(categoryGroup, context.user._id);
+    }
+
+    @Authorized("admin", "user")
+    @Mutation(() => [CategoryGroups])
+    addCategory(
+        @Arg("categoryGroup") categoryGroup: string,
+        @Arg("category") category: string,
+        @Ctx() context: Context
+    ) {
+        if (!context.user) throw new GraphQLError("User required to add category");
+        return UserService.addCategory(categoryGroup, category, context.user._id);
     }
 }

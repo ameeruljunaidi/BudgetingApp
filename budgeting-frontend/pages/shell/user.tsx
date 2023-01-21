@@ -1,30 +1,25 @@
-import { useQuery } from "@apollo/client";
-import { Loader } from "@mantine/core";
 import type { ReactElement } from "react";
+import { useContext } from "react";
 import ClientOnly from "../../components/client-only";
-import Shell from "../../components/shell";
-import GET_ME from "../../graphql/queries/get-me";
+import Shell, { UserContext } from "../../layouts/shell";
 import type { NextPageWithLayout } from "../_app";
 
 const Page: NextPageWithLayout = () => {
-    const { data, loading, error } = useQuery(GET_ME);
+  const user = useContext(UserContext);
 
-    if (loading) return <Loader />;
-    if (error) return <div>Error: ${error.graphQLErrors[0].message}</div>;
-
-    return <div>{JSON.stringify(data?.me)}</div>;
+  return <div>{JSON.stringify(user)}</div>;
 };
 
 const User: NextPageWithLayout = () => {
-    return (
-        <ClientOnly>
-            <Page />
-        </ClientOnly>
-    );
+  return (
+    <ClientOnly>
+      <Page />
+    </ClientOnly>
+  );
 };
 
 User.getLayout = function getLayout(page: ReactElement) {
-    return <Shell>{page}</Shell>;
+  return <Shell>{page}</Shell>;
 };
 
 export default User;

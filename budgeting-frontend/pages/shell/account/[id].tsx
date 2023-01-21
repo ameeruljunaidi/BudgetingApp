@@ -1,53 +1,55 @@
 import { useQuery } from "@apollo/client";
-import { Center, Container, Header, Loader, MediaQuery, Paper, Text } from "@mantine/core";
-import { useViewportSize } from "@mantine/hooks";
+import { Center, Loader, Space } from "@mantine/core";
 import { useRouter } from "next/router";
-import { ReactElement } from "react";
-import Shell from "../../../components/shell";
-import GET_ME from "../../../graphql/queries/get-me";
+import { ReactElement, useContext } from "react";
+import Shell, { UserContext } from "../../../layouts/shell";
+import GET_TRANSACTIONS_FROM_ACCOUNT from "../../../graphql/queries/get-transactions-from-account";
 import type { NextPageWithLayout } from "../../_app";
+import TransactionsTable from "../../../components/transaction/table";
+import { Transaction } from "../../../graphql/__generated__/graphql";
+import TransactionsHeader from "../../../components/transaction/header";
+import AccountDetail from "../../../components/account/account-detail";
+import GET_TRANSACTIONS_PAGINATED from "../../../graphql/queries/get-transactions-paginated";
 
 const AccountPage: NextPageWithLayout = () => {
-    const router = useRouter();
-    const { id } = router.query;
-    const { height, width } = useViewportSize();
+  const router = useRouter();
+  const accountId = router.query.id as string;
+  const user = useContext(UserContext);
 
-    const { data, loading, error } = useQuery(GET_ME);
+  const { data: transactionsData, loading: transactionsLoading } = useQuery(GET_TRANSACTIONS_PAGINATED, {
+    variables: { accountId, take: 25, skip: 0 },
+    skip: !accountId,
+    onError: (error) => {
+      console.error(error.graphQLErrors[0].message);
+      void router.push("/unauthenticated");
+    },
+  });
 
-    if (loading) {
-        return (
-            <Center h={height} w={width}>
-                <Loader />
-            </Center>
-        );
-    }
+  if (!user) return null;
 
-    if (error) {
-        return (
-            <Center h={height} w={width}>
-                <Text>User & account not found. {error.graphQLErrors[0].message}</Text>
-            </Center>
-        );
-    }
+  const account = user.accounts.find((account) => account?._id === accountId);
+  if (!account) return null;
 
-    const user = data?.me;
-    const account = user?.accounts.find(account => account?._id === id);
-    const transactions = account?.transactions;
-    console.log(account);
+  const transactions: Transaction[] = transactionsData?.getTransactionsFromAccountPaginated.items ?? [];
 
-    return (
-        <Container>
-            <Paper h={height * 0.1} w={460} bg="white" p="xs" withBorder radius="lg">
-                <Text size="sm">Name: {account?.name}</Text>
-                <Text size="sm">Currency: {account?.currency}</Text>
-                <Text size="sm">Balance: {account?.balance}</Text>
-            </Paper>
-        </Container>
-    );
+  return (
+    <>
+      <AccountDetail account={account} transactions={transactions} />
+      <Space h={8} />
+      <TransactionsHeader account={account} />
+      <Space h={8} />
+      <TransactionsTable loading={transactionsLoading} transactions={transactions} account={account} />
+      {transactionsLoading && (
+        <Center p={24}>
+          <Loader variant="dots" color="black" />
+        </Center>
+      )}
+    </>
+  );
 };
 
 AccountPage.getLayout = function getLayout(page: ReactElement) {
-    return <Shell>{page}</Shell>;
+  return <Shell>{page}</Shell>;
 };
 
 export default AccountPage;

@@ -35,4 +35,12 @@ export default class Account {
     @Field(() => Number, { defaultValue: 0 })
     @prop({ required: true, default: 0 })
     balance: number;
+
+    @Field(() => Date)
+    @prop({ required: true })
+    lastReconciled: Date;
+
+    @Field(() => Number)
+    @prop({ required: true })
+    reconciledBalance: number;
 }
