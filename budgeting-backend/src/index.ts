@@ -42,7 +42,7 @@ const logger = myLogger(path.basename(__filename));
         };
 
         const httpServer = http.createServer(app);
-        const builtSchema = await buildTypeDefsAndResolvers({ resolvers, authChecker });
+        const builtSchema = await buildTypeDefsAndResolvers({ resolvers, authChecker, emitSchemaFile: true });
         const schema = makeExecutableSchema(builtSchema);
         const server = new ApolloServer<Context>({
             schema,

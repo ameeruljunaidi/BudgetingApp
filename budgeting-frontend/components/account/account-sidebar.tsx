@@ -1,9 +1,8 @@
 import { Account } from "../../graphql/__generated__/graphql";
-import { ActionIcon, Box, Container, Group, Text } from "@mantine/core";
+import { Box, Text } from "@mantine/core";
 import { useRouter } from "next/router";
 import sidebarStyles from "../../styles/account-sidebar.style";
-import { memo, ReactElement } from "react";
-import { IconEdit } from "@tabler/icons";
+import { memo } from "react";
 import useCurrency from "../../hooks/useCurrency";
 
 type AccountSidebarProps = {
