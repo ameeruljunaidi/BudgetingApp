@@ -1,29 +1,16 @@
 import { useMutation } from "@apollo/client";
-import {
-  ActionIcon,
-  Button,
-  createStyles,
-  Flex,
-  Group,
-  LoadingOverlay,
-  NumberInput,
-  Select,
-  Tooltip,
-} from "@mantine/core";
-import { DatePicker } from "@mantine/dates";
 import { FormErrors, useForm } from "@mantine/form";
 import { useToggle } from "@mantine/hooks";
 import { ContextModalProps } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
-import { IconCirclePlus, IconX } from "@tabler/icons";
-import { FormEvent, useContext, useState } from "react";
+import { IconX } from "@tabler/icons";
+import { FormEvent, useContext } from "react";
 import ADD_TRANSACTION from "../../graphql/mutations/add-transaction";
 import GET_ME from "../../graphql/queries/get-me";
-import GET_TRANSACTIONS_FROM_ACCOUNT from "../../graphql/queries/get-transactions-from-account";
-import { Account, AddTransactionDetailInput, AddTransactionInput } from "../../graphql/__generated__/graphql";
+import { Account, AddTransactionInput } from "../../graphql/__generated__/graphql";
 import { UserContext } from "../../layouts/shell";
 import TransactionModalLayout, { TransactionModalInputBase } from "./transaction-modal-layout";
-import { formatMonthLabel } from "@mantine/dates/lib/components/CalendarBase/MonthsList/format-month-label/format-month-label";
+import GET_TRANSACTIONS_PAGINATED from "../../graphql/queries/get-transactions-paginated";
 
 export type AddTransactionModalProps = {
   account: Account;
@@ -91,7 +78,10 @@ export default function AddModal({ context, id, innerProps }: ContextModalProps<
     void addTransactionMutation({
       variables: { input: newTransaction },
       refetchQueries: [
-        { query: GET_TRANSACTIONS_FROM_ACCOUNT, variables: { accountId: account._id } },
+        {
+          query: GET_TRANSACTIONS_PAGINATED,
+          variables: { accountId: account._id, take: 25, skip: 0 },
+        },
         { query: GET_ME },
       ],
       onCompleted: (_data) => {
