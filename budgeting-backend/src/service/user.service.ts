@@ -37,7 +37,7 @@ const createUser = async (input: CreateUserInput): Promise<User> => {
 };
 
 const login = async (input: LoginInput, context: Context): Promise<string> => {
-    const user: User = await UserModel.findOne({ email: input.email }).lean();
+    const user: User = await UserModel.findOne({ email: input.email }).lean() as User;
 
     const wrongCredentials = "Wrong email or password. Please try again.";
 

@@ -1,6 +1,7 @@
-import { prop } from "@typegoose/typegoose";
+import { modelOptions, prop, Severity } from "@typegoose/typegoose";
 import { Field, ObjectType } from "type-graphql";
 
+@modelOptions({ options: { allowMixed: Severity.ALLOW } })
 @ObjectType()
 export default class CategoryGroups {
     @Field(() => String)

@@ -63,7 +63,7 @@ const deleteAccount = async (context: Context, accountId: string): Promise<Accou
         account.transactions.map((transaction) => TransactionModel.findByIdAndDelete(transaction.toString()))
     );
 
-    logger.info(`${transactions.length} transactions deleted from deleting acccount.`);
+    logger.info(`${transactions.length} transactions deleted from deleting account.`);
 
     const getUser = await UserService.getUserById(user._id);
 
