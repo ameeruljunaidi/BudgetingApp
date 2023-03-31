@@ -17,7 +17,7 @@ const AccountPage: NextPageWithLayout = () => {
   const user = useContext(UserContext);
 
   const { data: transactionsData, loading: transactionsLoading } = useQuery(GET_TRANSACTIONS_PAGINATED, {
-    variables: { accountId, take: 25, skip: 0 },
+    variables: { accountId, take: 200, skip: 0 },
     skip: !accountId,
     onError: (error) => {
       console.error(error.graphQLErrors[0].message);

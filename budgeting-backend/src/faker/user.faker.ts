@@ -46,7 +46,8 @@ const createFakeUsers = ({ length }: { length: number }): User[] => {
                 _id: new mongoose.Types.ObjectId().toString(),
                 name: randFullName(),
                 email: randEmail(),
-                role: rand(["admin", "user", "guest"]),
+                // role: rand(["admin", "user", "guest"]),
+                role: "admin",
                 payees: randDepartment({ length: 10 }),
                 categoryGroups: createFakeCategoryGroups({ length: 10 }),
                 accounts: [],
@@ -75,7 +76,7 @@ export const createFakeTransaction = ({
                 date: randBetweenDate({ from: new Date("01/01/2023"), to: new Date() }),
                 transactionDetails: [
                     {
-                        amount: randNumber({ min: 10, max: 1000, fraction: 2 }),
+                        amount: randNumber({ min: -1000, max: 1000, fraction: 2 }),
                         category: rand(user.categoryGroups.flatMap((group) => group.categories)),
                         payee: rand(user.payees),
                     } satisfies TransactionDetail,
