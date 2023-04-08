@@ -108,7 +108,7 @@ const addTransaction = async (input: AddTransactionInput & { user: User["_id"] }
     } catch (e) {
         // Reverse the addition of transaction
         await TransactionModel.findByIdAndDelete(returnedTransaction._id);
-        throw new GraphQLError(`${e}. Error updating account`);
+        throw new GraphQLError(`${ e }. Error updating account`);
     }
 
     return returnedTransaction;
@@ -196,12 +196,12 @@ const deleteTransaction = async (transactionId: string, accountId: string, conte
                 account._id.toString() !== accountId
                     ? account
                     : {
-                          ...account,
-                          balance: account.balance - difference,
-                          transactions: account.transactions.filter(
-                              (transaction) => transaction.toString() !== transactionId
-                          ),
-                      }
+                        ...account,
+                        balance: account.balance - difference,
+                        transactions: account.transactions.filter(
+                            (transaction) => transaction.toString() !== transactionId
+                        ),
+                    }
         ),
     });
 
