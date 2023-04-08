@@ -131,7 +131,7 @@ const getTransactionsFromAccount = async (user: User | null, accountId: string):
     const transactions = await TransactionModel.find({ _id: { $in: account.transactions } }).lean();
     if (!transactions) return [];
 
-    return transactions;
+    return transactions as Transaction[];
 };
 
 const updateTransaction = async (transaction: UpdateTransactionInput, userId: string): Promise<Transaction> => {
